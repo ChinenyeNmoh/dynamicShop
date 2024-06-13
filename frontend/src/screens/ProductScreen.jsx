@@ -1,13 +1,37 @@
 import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Image, ListGroup, Card, Button } from 'react-bootstrap';
 import Rating from '../components/Rating';
-import products from '../products';
 import { FaPlus, FaMinus } from "react-icons/fa";
+import axios from 'axios';
 
 const ProductScreen = () => {
   const { id } = useParams();
-  const product = products.find((p) => p._id === id);
+  const [product, setProduct] = useState({});
+  const [showAllComments, setShowAllComments] = useState(false);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const { data } = await axios.get(`/api/products/${id}`);
+      console.log(data.product);
+      setProduct(data.product || {});
+    };
+    fetchProduct();
+  }, [id]);
+
+  const renderComments = () => {
+    if (!product.ratings) return null;
+    const commentsToShow = showAllComments ? product.ratings : product.ratings.slice(0, 1);
+    return commentsToShow.map((c, index) => (
+      <ListGroup.Item key={index}>
+        {c.comment}
+        {c.star && <Rating value={c.star} text={c.star} />}
+        <span className="fw-bold">By:</span> {c.postedby && (c.postedby.local?.email || c.postedby.google?.email || c.postedby.facebook?.email)}
+        <hr />
+      </ListGroup.Item>
+    ));
+  };
 
   return (
     <>
@@ -16,7 +40,9 @@ const ProductScreen = () => {
       </Link>
       <Row>
         <Col md={5}>
-          <Image src={product.image} alt={product.name} fluid />
+          {product.images && product.images.length > 0 && (
+            <Image src={product.images[0].url} alt={product.name} fluid />
+          )}
         </Col>
         <Col md={7}>
           <ListGroup variant='flush'>
@@ -25,8 +51,8 @@ const ProductScreen = () => {
             </ListGroup.Item>
             <ListGroup.Item>
               <Rating
-                value={product.rating}
-                text={`${product.numReviews} reviews`}
+                value={product.totalrating}
+                text={`${product.totalrating} reviews`}
               />
             </ListGroup.Item>
             <ListGroup.Item>
@@ -37,16 +63,20 @@ const ProductScreen = () => {
             </ListGroup.Item>
             <ListGroup.Item>
               <h5 className="text-center">Comments</h5>
-              {product.comments && product.comments.map((comment, index) => (
-                <ListGroup.Item key={index}>
-                  {comment}
-                </ListGroup.Item>
-              ))}
+              {renderComments()}
+              {product.ratings && product.ratings.length > 1 && (
+                <button
+                  onClick={() => setShowAllComments(!showAllComments)}
+                  className='mt-2 text-primary btn btn-link'
+                >
+                  {showAllComments ? 'Show Less' : 'Show More'}
+                </button>
+              )}
             </ListGroup.Item>
           </ListGroup>
         </Col>
 
-        <Col md={5}>
+        <Col md={5} className='mt-3'>
           <Card>
             <ListGroup variant='flush'>
               <ListGroup.Item>
@@ -62,7 +92,7 @@ const ProductScreen = () => {
                 <Row>
                   <Col md={6} className="fw-bold mb-2">Status:</Col>
                   <Col md={6} className="mb-2">
-                    {product.countInStock > 0 ? 'In Stock' : 'Out Of Stock'}
+                    {product.quantity > 0 ? 'In Stock' : 'Out Of Stock'}
                   </Col>
                   <Col md={6} className="fw-bold">Quantity:</Col>
                   <Col md={3}>
@@ -82,7 +112,7 @@ const ProductScreen = () => {
                 <Button
                   className='btn-block'
                   type='button'
-                  disabled={product.countInStock === 0}
+                  disabled={product.quantity === 0}
                 >
                   Add To Cart
                 </Button>

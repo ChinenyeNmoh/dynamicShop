@@ -1,42 +1,111 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const userSchema = mongoose.Schema(
+
+const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
+    local: {
+      firstname: {
+        type: String,
+      },
+      lastname: {
+        type: String,
+      },
+      email: {
+        type: String,
+        unique: true,
+      },
+      mobile: {
+        type: String,
+        unique: true,
+      },
+      password: {
+        type: String,
+      },
+      confirm_password: {
+        type: String,
+        validate: {
+          validator: function (value) {
+            return value === this.local.password;
+          },
+          message: 'Passwords do not match',
+        },
+      },
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
+    google: {
+      googleId: String,
+      email: String,
+      firstname: String,
+      lastname: String,
     },
-    password: {
-      type: String,
-      required: true,
+    facebook: {
+      facebookId: String,
+      email: String,
+      firstname: String,
+      lastname: String,
     },
+    role: {
+      type: String,
+      default: 'user',
+    },
+    address: {
+      type: String,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isPasswordModified: {
+      type: Boolean,
+      default: false,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   },
   {
     timestamps: true,
   }
 );
 
-// Match user entered password to hashed password in database
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
+userSchema.pre('save', async function (next) {
+  try {
+    // Check if the local password field is present and not empty
+    if (this.local && this.local.password) {
+      // Generate a salt for password hashing
+      const salt = await bcrypt.genSalt(10);
 
-// Encrypt password using bcrypt
-userSchema.pre('save', async function (next) { // we cant use arrow function with "this" keyword
-  if (!this.isModified('password')) { //if password isnt changed, then call next else hash the password
-    next();
+      // Hash the password with the generated salt
+      this.local.password = await bcrypt.hash(this.local.password, salt);
+
+      // Check if confirm_password is present before hashing
+      if (this.local.confirm_password) {
+        this.local.confirm_password = await bcrypt.hash(this.local.confirm_password, salt);
+      }
+
+      // Continue with the save operation
+      next();
+    } else {
+      // If password is missing or empty, proceed without hashing
+      next();
+    }
+  } catch (error) {
+    // Handle any errors that occurred during password hashing
+    next(error);
   }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
 });
 
-const User = mongoose.model('User', userSchema);
+// Instance method to check if the entered password matches the stored hashed password
+userSchema.methods.isPasswordMatched = async function (enteredPassword) {
+  try {
+    // Use bcrypt.compare to compare the entered password with the stored hashed password
+    return await bcrypt.compare(enteredPassword, this.local.password);
+  } catch (error) {
+    // Handle any errors that occurred during password comparison
+    throw error;
+  }
+};
 
-export default User;
+export default  mongoose.model('User', userSchema);

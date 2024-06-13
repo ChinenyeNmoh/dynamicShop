@@ -10,7 +10,7 @@ const generateToken = (res, userId) => {
     expiresIn: '30d',
   });
 
-  res.cookie('chinenye', token, {
+  res.cookie('jwtToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development', // Use secure cookies in production
     sameSite: 'strict', // Prevent CSRF attacks
