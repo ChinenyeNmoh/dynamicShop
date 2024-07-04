@@ -102,15 +102,19 @@ const processOrderEmailTemplate = (myOrder, firstname, lastname, email, phoneNo)
 		<br/>
             <tr>
                 <td colspan="2"><strong> SubTotal:</strong></td>
-                <td align="right">N${myOrder.subTotal}</td>
+                <td align="right">N${myOrder.cartTotal}</td>
             </tr>
             <tr>
                 <td colspan="2"><strong>SubTotalAfterCoupon:</strong></td>
-                <td align="right">N${myOrder.subTotalAfterCoupon}</td>
+                <td align="right">N${myOrder.totalAfterCoupon}</td>
             </tr>
             <tr>
                 <td colspan="2"><strong>Shipping Price:</strong></td>
                 <td align="right">N${myOrder.shippingFee}</td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Tax Price:</strong></td>
+                <td align="right">N${myOrder.taxFee}</td>
             </tr>
 			<br/>
             <tr>
@@ -140,12 +144,13 @@ const processOrderEmailTemplate = (myOrder, firstname, lastname, email, phoneNo)
 
     <h2>Shipping address</h2>
     <p>
-        <strong>Full Name: </strong>${myOrder.address.firstname} ${myOrder.address.lastname},<br/>
-        <strong>Street: </strong>${myOrder.address.street},<br/>
-        <strong>City: </strong>${myOrder.address.city},<br/>
-        <strong>State: </strong>${myOrder.address.state},<br/>
-        <strong>Landmark: </strong>${myOrder.address.landmark},<br/>
-        <strong>Recipient Phone No: </strong>${myOrder.address.recipientPhoneNo}<br/>
+        <strong>Full Name: </strong>${myOrder.shippingAddress?.recipientName} <br/>
+        <strong>Street: </strong>${myOrder.shippingAddress.street},<br/>
+        <strong>City: </strong>${myOrder.shippingAddress.city},<br/>
+        <strong>State: </strong>${myOrder.shippingAddress.state},<br/>
+        <strong>Landmark: </strong>${myOrder.shippingAddress.landmark},<br/>
+        <strong>Country: </strong>${myOrder.shippingAddress.country},<br/>
+        <strong>Recipient Phone No: </strong>${myOrder.shippingAddress.recipientMobile}<br/>
     </p>
 
     <h2>Billing address</h2>

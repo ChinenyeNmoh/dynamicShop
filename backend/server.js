@@ -5,6 +5,10 @@ import imageRoutes from './routes/uploadRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import typeRoutes from './routes/typeRoutes.js';
+import addressRoutes from './routes/addressRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 import { notFound, errorHandler } from './middleswares/errorMiddleware.js'
 import connectDB from "./config/db.js"
 import cookieParser from 'cookie-parser';
@@ -36,7 +40,12 @@ configurePassport(passport);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors())
+app.use((req, res, next) => {
+  res.header({"Access-Control-Allow-Origin": "*"});
+  next();
+}) 
+
+app.use(cors());
 
 
 app.use(
@@ -78,6 +87,10 @@ app.use('/api/image', imageRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/types', typeRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/carts', cartRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/orders', orderRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

@@ -10,14 +10,41 @@ const cartSchema = new mongoose.Schema(
           ref: "Product",
         },
         quantity: {
-          type: Number,
-          default: 1
+          type: Number
         },
         price: Number,
       },
     ],
-    cartTotal: Number,
-    totalAfterDiscount: Number,
+    shippingAddress: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+    },
+    cartTotal: {
+      type: Number,
+      default: 0.0,
+    },
+    totalAfterCoupon: {
+      type: Number,
+      default: 0.0,
+    },
+    shippingFee: {
+      type: Number,
+      default: 0.0,
+    }, taxFee: {
+      type: Number,
+      required: true,
+      default: 0.0,
+    },
+    totalPrice: {
+      type: Number,
+      default: 0.0,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cashOnDelivery", "paypal", "flutterwave"],
+      default: "cashOnDelivery",
+      required: true,
+    },
     orderedby: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

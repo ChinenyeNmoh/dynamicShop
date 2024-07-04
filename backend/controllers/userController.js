@@ -6,13 +6,15 @@ import crypto from 'crypto';
 import Token from '../models/tokenModel.js';
 import passwordResetToken from '../models/passwordTokenModel.js';
 import {sendEmail, emailVerificationTemplate, passwordResetTemplate} from '../utils/mail.js';
+import jwt from 'jsonwebtoken';
+import Cart from '../models/cartModel.js';
 
 // @desc    Auth user & get token
 // @route   POST /api/users/auth
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ "local.email": email });
+  const user = await User.findOne({ "local.email": email })
   if (user && (await user.isPasswordMatched(password))) {
     console.log("user password match")
     if (!user.isVerified) {
@@ -32,13 +34,27 @@ const authUser = asyncHandler(async (req, res) => {
       return res.status(400).json({ 
         message: "An Email was sent to your account.Verify your account to login" 
       });
+    }else if(user.isBlocked){
+      return res.status(403).json({ 
+        message: "Your account has been blocked. Contact the admin for more information" 
+      });
     }
     generateToken(res, user._id);
-    
+     // Remove sensitive fields before sending the user data
+     const userResponse = user.toObject();
+    if (userResponse.local) {
+      delete userResponse.local.password;
+      
+    }
+    if (userResponse.google) {
+      delete userResponse.google.googleId;
+    }
+    if (userResponse.facebook) {
+      delete userResponse.facebook.facebookId;
+    }
 
     res.json({
-      message: "user found",
-      data: user
+      user: userResponse,
     });
   } else {
     res.status(401);
@@ -64,8 +80,6 @@ const createUser = asyncHandler(async (req, res) => {
     // Check if the mobile number already exists in the local field
     const findPhoneNo = await User.findOne({ "local.mobile": mobile });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
 
     if (findGoogleUser) {
       // Update the existing Google user with local information
@@ -77,9 +91,9 @@ const createUser = asyncHandler(async (req, res) => {
             "local.lastname": lastname,
             "local.email": email,
             "local.mobile": mobile,
-            "local.password": hashPassword,
-            "local.confirm_password": hashPassword,
-            "address": address || "",
+            "local.password": password,
+            
+            "address": address,
             isVerified: true,
           },
         },
@@ -97,9 +111,8 @@ const createUser = asyncHandler(async (req, res) => {
             "local.lastname": lastname,
             "local.email": email,
             "local.mobile": mobile,
-            "local.password": hashPassword,
-            "local.confirm_password": hashPassword,
-            "address": address || "",
+            "local.password": password,
+            "address": address,
             isVerified: true,
           },
         },
@@ -120,8 +133,8 @@ const createUser = asyncHandler(async (req, res) => {
             lastname,
             email,
             mobile,
-            password: hashPassword,
-            confirm_password: hashPassword,
+            address,
+            password
           },
           address,
         });
@@ -141,7 +154,7 @@ const createUser = asyncHandler(async (req, res) => {
       await sendEmail(newUser.local.email, 'Account verification',htmlContent);
       console.log('Verification email sent');
 
-        res.status(201).json({ message: 'User created successfully', data: newUser });
+        res.status(201).json({ message: 'Account created successfully. Check your email to verify your account' });
       }
     }
   
@@ -177,30 +190,11 @@ const verifyToken = asyncHandler(async (req, res) => {
   );
 
   await Token.findByIdAndDelete(userToken._id);
-  res.status(200).send({ message: "Email verified successfully. you can login" });
+  res.status(200).redirect('http://localhost:3000/login?message="Email verified successfully. you can login"');
 });
 
-// login success function
-const successRoute = asyncHandler((req, res) => {
-  // Access user information from req.user
-  const user = req.user;
-  console.log(req.user)
 
-    if (!user) {
-      // Handle the case where user information is not available
-    res.status(401)
-    throw new Error('User not authenticated');
-    }else{
-      return res.json({ message: 'Authentication successful', user: user });
-    }
-});
 
-// login fail function
-const failed = (req, res) => {
-  res.status(400).json({ 
-    message: 'Login failed' 
-  });
-};
 
 // request password reset
 const forgotPassword = asyncHandler(async (req, res) => {
@@ -223,8 +217,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
         { isPasswordModified: false },
         { new: true }
       );
+      
     }
-
+    // Delete any existing password reset tokens
+    const existingToken = await passwordResetToken.findOne({ userId: user._id });
+    if (existingToken) {
+      await existingToken.deleteOne();
+    }
     if (user.isVerified === false) {
       res.status(400)
       throw new Error( "An Email was sent to your account. Verify your account to login");
@@ -248,43 +247,37 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 });
 
-// reset password
 const resetPassword = asyncHandler(async (req, res) => {
   const { id, token } = req.params;
-    const user = await User.findById(id);
+  const user = await User.findById(id);
 
-    if (!user) {
-      res.status(400);
-      throw new Error("No user found with this id");
-    }
+  if (!user) {
+    return res.status(400).redirect('http://localhost:3000/login?err=No user found with this id');
+  }
 
-    const userToken = await passwordResetToken.findOne({
-      userId: user._id,
-      token: token,
-    });
+  const userToken = await passwordResetToken.findOne({
+    userId: user._id,
+    token: token,
+  });
 
-    if (!userToken) {
-      res.status(400);
-      throw new Error("Token is Invalid");
-    }
+  if (!userToken) {
+    return res.status(400).redirect('http://localhost:3000/login?err=Token is Invalid');
+  }
 
-    // Token is valid, update the user and delete the token
-    await User.findByIdAndUpdate(
-      id,
-      { isPasswordModified: true },
-      { new: true }
-    );
+  // Token is valid, update the user and delete the token
+  await User.findByIdAndUpdate(id, { isPasswordModified: true }, { new: true });
 
-    // The TTL index will automatically remove expired tokens
-    await passwordResetToken.findByIdAndDelete(userToken._id);
-    res.status(200).send({ message: "You are a verified user. You can update your password now" });
+  // The TTL index will automatically remove expired tokens
+  await passwordResetToken.findByIdAndDelete(userToken._id);
 
+  return res.status(200).redirect(`http://localhost:3000/update/?message=You+are+a+verified+user.+You+can+update+your+password+now&id=${user._id}`);
 });
 
 //update password route
 const updatePassword = asyncHandler(async (req, res) => {
-  const { id, token } = req.params;
-  const {newPassword, confirmPassword} = req.body;
+  const {id} = req.params;
+  const {password, confirmPassword,  } = req.body;
+  console.log('request body',req.body)
 
     // Check if the user exists
     const user = await User.findById(id);
@@ -321,20 +314,17 @@ const updatePassword = asyncHandler(async (req, res) => {
       });
     }else{
        // Validate and compare passwords
-    if (newPassword !== confirmPassword) {
+    if (password !== confirmPassword) {
       res.status(400);
       throw new Error("Passwords do not match");
     }
 
-    // Hash the passwords
     const salt = await bcrypt.genSalt(10);
-    const hashPassword1 = await bcrypt.hash(newPassword, salt);
-    const hashPassword2 = await bcrypt.hash(confirmPassword, salt);
-
+    const hashPw = await bcrypt.hash(password, salt);
     // Update the password
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { "local.password": hashPassword1, "local.confirm_password": hashPassword2 },
+      { "local.password": hashPw },
       { new: true }
     );
 
@@ -348,6 +338,9 @@ const updatePassword = asyncHandler(async (req, res) => {
 
 
 
+// @desc    Logout user / clear cookie
+// @route   POST /api/users/logout
+// @access  Public
 // @desc    Logout user / clear cookie
 // @route   POST /api/users/logout
 // @access  Public
@@ -388,14 +381,166 @@ const logOut = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Block user
+const blockUser = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    await User.findByIdAndUpdate(
+      id,
+      { isBlocked: true },
+      { new: true }
+    );
+    res.status(200).send({ message: "User blocked successfully" });
+  }
+});
+
+// @desc    unBlock user
+const unBlockUser = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    await User.findByIdAndUpdate(
+      id,
+      { isBlocked: false },
+      { new: true }
+    );
+    res.status(200).send({ message: "User unblocked successfully" });
+  }
+});
+
+// @desc    delete user
+const deleteUser = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    await User.findByIdAndDelete(id);
+    res.status(200).send({ message: "User deleted successfully" });
+  }
+})
+
+// @desc    update user
+const updateUser = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    await User.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).send({ message: "User updated successfully" });
+  }
+});
+
+// @desc    get all users
+const getUsers = asyncHandler(async(req, res) => {
+  const users = await User.find({});
+  if (!users) {
+    res.status(400);
+    throw new Error("No user found");
+  }else{
+    res.status(200).send({ message: "Users fetched successfully", data: users });
+  }
+});
+
+// @desc  my user profile
+const myProfile = asyncHandler(async(req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    res.status(200).send({ message: "User fetched successfully", data: user });
+  }
+})
+// @desc  user profile
+const getUser = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    res.status(200).send({ message: "User fetched successfully", data: user });
+  }
+})
+
+
+// @desc    update my profile
+const updateMyProfile = asyncHandler(async(req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found with this id");
+  }else{
+    const newUser = {
+      "local.firstname": req.body.firstname ? req.body.firstname : req.user.local.firstname,
+      "local.lastname": req.body.lastname ? req.body.lastname : req.user.local.lastname,
+      "address": req.body.address ? req.body.address : req.user.address
+    };
+    await User.findByIdAndUpdate(
+      req.user._id,
+      newUser,
+      { new: true }
+    );
+    res.status(200).send({ message: "User updated successfully", data: user });
+  }
+});
+
+const sendData = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    res.status(401);
+    throw new Error('User not authenticated');
+  }
+
+  try {
+    const user = await User.findById(req.user._id).select('-local.password  -google.googleId -facebook.facebookId');
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    const token = jwt.sign({ user }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    // Redirecting with token in URL
+    res.redirect(`http://localhost:3000/login?token=${token}`);
+  } catch (error) {
+    res.status(500).send({ message: 'Error sending data', error: error.message });
+  }
+});
+
+
 export {
-  createUser, 
-  successRoute,
-  failed,
+  createUser,
+  sendData, 
   logOut,
   verifyToken,
   updatePassword,
   resetPassword,
   forgotPassword,
   authUser,
+  blockUser,
+  unBlockUser,
+  updateUser,
+  deleteUser,
+  getUsers,
+  myProfile,
+  updateMyProfile,
+  getUser
+  
 };

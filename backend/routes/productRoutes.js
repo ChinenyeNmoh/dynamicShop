@@ -5,11 +5,13 @@ import {createProduct,
     getAllProduct,
     updateProduct,
     productRating,
-    deleteProduct
+    deleteProduct,
+    searchProduct
 } from  "../controllers/productController.js"
 import { protect,   ensureAdmin, validateId, validateQuery } from '../middleswares/authMiddleware.js';
 
 router.post('/', protect, ensureAdmin, createProduct)
+router.get('/search', searchProduct)
 router.get('/', validateQuery, getAllProduct)
 router.get('/:id', validateId, getProduct)
 router.put('/update/:id', protect, ensureAdmin, validateId, updateProduct)

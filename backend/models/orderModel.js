@@ -7,25 +7,6 @@ const orderSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-      address: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Address",
-      },
-      subTotal: {
-        type: Number,
-        default: 0.0,
-      },
-      subTotalAfterCoupon: {
-        type: Number,
-      },
-      shippingFee: {
-        type: Number,
-        default: 5000.0,
-      },
-      finalPrice: {
-        type: Number,
-        default: 0.0,
-      },
       products: [
         {
           productId: {
@@ -33,11 +14,9 @@ const orderSchema = new mongoose.Schema(
             ref: "Product",
           },
           quantity: {
-            type: Number,
+            type: Number
           },
-          price: {
-            type: Number,
-          },
+          price: Number,
         },
       ],
       paidAt: {
@@ -48,9 +27,34 @@ const orderSchema = new mongoose.Schema(
         enum: ["pending", "paid"],
         default: "pending",
       },
+      shippingAddress: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address",
+      },
+      cartTotal: {
+        type: Number,
+        default: 0.0,
+      },
+      totalAfterCoupon: {
+        type: Number,
+        default: 0.0,
+      },
+      shippingFee: {
+        type: Number,
+        default: 0.0,
+      }, taxFee: {
+        type: Number,
+        required: true,
+        default: 0.0,
+      },
+      totalPrice: {
+        type: Number,
+        default: 0.0,
+      },
       paymentMethod: {
         type: String,
-        enum: ["cash on delivery", "card"],
+        enum: ["cashOnDelivery", "paypal", "flutterwave"],
+        default: "cashOnDelivery",
         required: true,
       },
       orderStatus: {

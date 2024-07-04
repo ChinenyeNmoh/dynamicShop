@@ -1,12 +1,7 @@
 import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema({
-  firstname: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  lastname: {
+  recipientName: {
     type: String,
     required: true,
     trim: true,
@@ -27,8 +22,13 @@ const addressSchema = new mongoose.Schema({
   },
   landmark: {
     type: String,
+    
   },
-  recipientPhoneNo: {
+  
+  country: {
+    type: String,
+  },
+  recipientMobile: {
     type: String,
     required: true,
   },

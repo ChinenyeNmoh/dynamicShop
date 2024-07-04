@@ -6,6 +6,11 @@ import mongoose from 'mongoose';
 const protect = asyncHandler(async (req, res, next) => {
   let token = req.cookies.jwtToken;
   console.log('Token:', token);
+  if(!token && !req.user){
+    return res.status(400).json({
+      message: "Log in to continue",
+    });
+  }
 
   if (req.isAuthenticated()) {
     console.log('User is authenticated with Passport');

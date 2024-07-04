@@ -12,16 +12,19 @@ since we want Navbar to be present in all the pages, we imported navbar and posi
 */ 
 
 function App() {
+  
   return (
     <>
-    <ToastContainer />
+    <ToastContainer position="top-center" />
     <Logo />
     <Header />
+    
     <main className='py-3'>
       <Container>
         <Outlet />
       </Container>
     </main>
+    
     <Footer />
   </>
   )

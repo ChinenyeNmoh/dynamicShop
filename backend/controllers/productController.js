@@ -89,9 +89,34 @@ const getAllProduct = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(404);
-    throw new Error('Sorry, could not retrieve products');
+    throw new Error('Sorry, no product found');
   }
 });
+
+
+//search products
+const searchProduct = asyncHandler(async (req, res) => {
+  const { search } = req.query;
+  console.log("Search query", search);
+  if (!search) {
+    res.status(400);
+    throw new Error('Search query is required');
+  }
+  const products = await Product.find({
+    $or: [
+      { name: { $regex: search, $options: 'i' } },
+      {description: { $regex: search, $options: 'i' } },
+    ],
+  });
+  if(products && products.length > 0) {
+    return res.status(200).json({
+      products: products,
+    });
+  } else {
+    res.status(404);
+    throw new Error('Sorry, no product found');
+  }
+})
 
 
 //update product
@@ -115,6 +140,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   req.body.description = req.body.description ? req.body.description : findProduct.description;
   req.body.quantity = req.body.quantity ? req.body.quantity : findProduct.quantity;
   req.body.images = req.body.images ? req.body.images : findProduct.images;
+  req.body.discountedPrice = req.body.discountedPrice ? req.body.discountedPrice : findProduct.discountedPrice;
 
   const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
 
@@ -206,4 +232,4 @@ const deleteProduct = asyncHandler(async(req, res) => {
       { new: true }
     );
   });
-export { createProduct, getProduct, getAllProduct, updateProduct, deleteProduct, productRating}
+export { createProduct, getProduct, getAllProduct, updateProduct, deleteProduct,searchProduct, productRating}

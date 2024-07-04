@@ -22,15 +22,6 @@ const userSchema = new mongoose.Schema(
       password: {
         type: String,
       },
-      confirm_password: {
-        type: String,
-        validate: {
-          validator: function (value) {
-            return value === this.local.password;
-          },
-          message: 'Passwords do not match',
-        },
-      },
     },
     google: {
       googleId: String,
@@ -72,6 +63,9 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre('save', async function (next) {
   try {
+    if (!this.isModified('local.password')) {
+      next();
+    }
     // Check if the local password field is present and not empty
     if (this.local && this.local.password) {
       // Generate a salt for password hashing
@@ -79,11 +73,6 @@ userSchema.pre('save', async function (next) {
 
       // Hash the password with the generated salt
       this.local.password = await bcrypt.hash(this.local.password, salt);
-
-      // Check if confirm_password is present before hashing
-      if (this.local.confirm_password) {
-        this.local.confirm_password = await bcrypt.hash(this.local.confirm_password, salt);
-      }
 
       // Continue with the save operation
       next();

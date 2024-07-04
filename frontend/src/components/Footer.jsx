@@ -1,7 +1,7 @@
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col} from "react-bootstrap";
 import { IoMdMail } from "react-icons/io";
 import { FaLocationDot, FaXTwitter  } from "react-icons/fa6";
 import { FaUser, FaPhone, FaInstagram, FaFacebook,   } from "react-icons/fa";
@@ -45,7 +45,7 @@ const Footer = () => {
             <FaFacebook className="text-primary fs-4"/>
             </Link>
             <Link to="#">
-            <FaInstagram className="text-danger fs-4"/>
+            <Image src='/images/instagram.png' className='google'></Image>
             </Link>
             <Link to="#">
             <FaXTwitter className="text-white fs-4 " />
