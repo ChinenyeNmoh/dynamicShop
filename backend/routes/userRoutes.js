@@ -11,8 +11,6 @@ import {
   logOut,
   getUsers,
   updateUser,
-  blockUser,
-  unBlockUser,
   deleteUser,
   myProfile,
   updateMyProfile,
@@ -38,21 +36,21 @@ router.get(
   passport.authenticate('facebook'), 
   sendData
 );
+router
+  .route('/profile')
+  .get(protect, myProfile)
+  .put(protect, updateMyProfile);
 
 router.get('/logout', protect, logOut);
 router.get("/:id/verify/:token/", validateId, verifyToken);
 router.post('/forgotpassword', ensureGuest, forgotPassword)
 router.get("/:id/resetpassword/:token/", ensureGuest, validateId, resetPassword);
 router.put("/updatepassword/:id", ensureGuest, validateId, updatePassword);
-router.put("/block/:id", protect, ensureAdmin, validateId, blockUser);
-router.put("/unblock/:id", protect, ensureAdmin, validateId, unBlockUser);
-router.delete("/deleteuser/:id", protect, ensureAdmin, validateId, deleteUser);
+
+router.delete("/:id", protect, ensureAdmin, validateId, deleteUser);
 router.get('/allusers', protect, ensureAdmin, getUsers);
-router.get('/getuser/:id', protect, ensureAdmin, getUser);
-router.put('/updateuser/:id', protect, ensureAdmin, validateId, updateUser);
-router
-  .route('/profile')
-  .get(protect, myProfile)
-  .put(protect, updateMyProfile);
+router.get('/:id', protect, ensureAdmin, getUser);
+router.put('/:id', protect, ensureAdmin, validateId, updateUser);
+
 
 export default router;

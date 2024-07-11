@@ -1,20 +1,15 @@
-import Product from '../models/productModel.js';
+import { v4 as uuidv4, v4 } from 'uuid';
 import ProductType from '../models/typeModel.js';
 import asyncHandler from 'express-async-handler';
 
 // Create productType
 const createType = asyncHandler(async (req, res) => {
-  const newType = await ProductType.findOne({ title: req.body.title });
+  const n = v4();
 
-  if (newType) {
-    res.status(400);
-    throw new Error(`${req.body.title} type has already exist`);
-  }
-
-  const type = await ProductType.create(req.body);
+  const type = await ProductType.create({title:'new type' + n.toString().substring(0, 3)});
 
   res.status(200).json({
-    message: `${req.body.title} type created`,
+    message: 'Product type created',
     data: type,
   });
 });
@@ -36,6 +31,7 @@ const updateType = asyncHandler(async (req, res) => {
     data: updatedType,
   });
 });
+
 
 // Delete a product type
 const deleteType = asyncHandler(async (req, res) => {
@@ -84,7 +80,7 @@ const getAllType = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "Success",
     count: counter,
-    data: all,
+    types: all,
   });
 });
 

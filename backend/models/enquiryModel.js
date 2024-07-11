@@ -12,12 +12,12 @@ const enquirySchema = new mongoose.Schema({
     required: true,
     
   },
-  phoneNo: {
+  mobile: {
     type: String,
     required: true,
    
   },
-  comment: {
+  message: {
     type: String,
     required: true,
   },

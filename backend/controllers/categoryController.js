@@ -1,18 +1,12 @@
 import asyncHandler from 'express-async-handler';
 import Category from '../models/categoryModel.js';
+import { v4 as uuidv4, v4 } from 'uuid';
 
 
 // Create category
 const createCategory = asyncHandler(async (req, res) => {
-  const newCat = await Category.findOne({ title: req.body.title });
-
-  if (newCat) {
-    res.status(400);
-    throw new Error("Category already exists!");
-  }
-
-  const cat = await Category.create(req.body);
-
+  const n = v4();
+  const cat = await Category.create({title:'new category' + n.toString().substring(0, 3)});
   res.status(200).json({
     message: "Category created",
     data: cat,
@@ -84,7 +78,7 @@ const getAllCategory = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "Success",
     count: counter,
-    data: all,
+    categories: all,
   });
 });
 

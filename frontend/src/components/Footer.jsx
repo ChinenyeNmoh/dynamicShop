@@ -7,13 +7,45 @@ import { FaLocationDot, FaXTwitter  } from "react-icons/fa6";
 import { FaUser, FaPhone, FaInstagram, FaFacebook,   } from "react-icons/fa";
 import { Link } from "react-router-dom"
 import Image from 'react-bootstrap/Image';
-import Dynamik2 from "/images/Dynamik2.png"
+import { useCreateEnquiryMutation } from '../slices/enquiryApiSlice';
+import Loader from './Loader';
+import { useState } from 'react';
+import { AiOutlineMessage } from "react-icons/ai";
+import {toast} from 'react-toastify';
+
 
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [message, setMessage] = useState('');
+    const [mobile, setMobile] = useState('');
+    const [createEnquiry, { isLoading }] = useCreateEnquiryMutation();
+
+    const enquiryHandler = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await createEnquiry({
+                name,
+                email,
+                message,
+                mobile,
+            }).unwrap();
+            setName('');
+            setEmail('');
+            setMessage('');
+            setMobile('');
+            
+            toast.success(res.message);
+        } catch (error) {
+            console.error(error);
+            toast.error(error?.data?.message || error.error);
+        }
+    }
   return (
     <footer className="bg-dark">
+      {isLoading && <Loader />}
       <Container >
         <Row className="d-flex justify-content-between">
         <Col md={4} className="text-white">
@@ -52,31 +84,56 @@ const Footer = () => {
             </Link>
             </div>
             
-          
-
-
 
           </Col>
           <Col md={4} className="text-primary">
             <h3 className="text-center mt-4 mb-4 pt-3">Send a Message</h3>
-            <Form>
-
+            <Form onSubmit={enquiryHandler}>
               <InputGroup className="mb-3 ">
                 <InputGroup.Text ><FaUser /></InputGroup.Text>
-                <Form.Control type="text" placeholder="John Doe" className="fst-italic" />
+                <Form.Control 
+                type="text" 
+                placeholder="John Doe" 
+                className="fst-italic"
+                onChange={(e) => setName(e.target.value)}
+                 />
               </InputGroup>
 
               <InputGroup className="mb-3">
                 <InputGroup.Text ><FaPhone /></InputGroup.Text>
-                <Form.Control type="number" placeholder="09090000000" className="fst-italic" />
+                <Form.Control 
+                type="number" 
+                placeholder="09090000000" 
+                className="fst-italic"
+                onChange={(e) => setMobile(e.target.value)}
+                />
               </InputGroup>
 
               <InputGroup className="mb-3">
                 <InputGroup.Text ><IoMdMail /></InputGroup.Text>
-                <Form.Control type="email" placeholder="johndoe@email.com" className="fst-italic" />
+                <Form.Control 
+                type="email" 
+                placeholder="johndoe@email.com" 
+                className="fst-italic"
+                onChange={(e) => setEmail(e.target.value)}
+                 />
               </InputGroup>
 
-              <Button variant="primary" type="submit" className="send">
+              <InputGroup className="mb-3">
+              <InputGroup.Text ><AiOutlineMessage /></InputGroup.Text>
+                <Form.Control 
+                as="textarea" 
+                placeholder="Enter your message here" 
+                className="fst-italic"
+                onChange={(e) => setMessage(e.target.value)}
+                />
+                </InputGroup>
+
+              <Button 
+              variant="primary" 
+              type="submit" 
+              className="send"
+              >
                 send
               </Button>
             </Form>

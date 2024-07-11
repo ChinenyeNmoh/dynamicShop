@@ -4,7 +4,7 @@ import asyncHandler from "express-async-handler";
 import Cart from '../models/cartModel.js';
 import User from '../models/userModel.js';
 import Product from '../models/productModel.js';
-import { sendEmail, processOrderEmailTemplate } from '../utils/mail.js';
+import { sendEmail, processOrderEmailTemplate, deliveredOrderEmailTemplate } from '../utils/mail.js';
 import Flutterwave from 'flutterwave-node-v3';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,6 +14,7 @@ const flw = new Flutterwave(process.env.PUBLIC_KEY, process.env.SECRET_KEY);
 
 const checkOut = asyncHandler(async (req, res) => {
   const { _id } = req.user;
+  const { getCartID } = req.body;
   let payload = {};
 
   try {
@@ -139,8 +140,40 @@ const checkOut = asyncHandler(async (req, res) => {
         console.log(url);
         return res.redirect(url);
       }
-    }
+    }else if(getCartID){
+      newOrder = {
+        user: _id,
+        products: userCart.products.map(item => ({
+              productId: item.productId._id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+        shippingAddress: userCart.shippingAddress,
+        cartTotal: userCart.cartTotal,
+        totalPrice: userCart.totalPrice,
+        taxFee: userCart.taxFee,
+        totalAfterCoupon: userCart.totalAfterCoupon,
+        shippingFee: userCart.shippingFee,
+        paymentMethod: userCart.paymentMethod,
+        paymentStatus: "paid",
+        paidAt: Date.now(),
+        paymentResult : {
+          id: req.body.id,
+          status: req.body.status,
+          update_time: req.body.update_time,
+          email_address: req.body.payer.email_address,
+        }
+      };
+      myOrder = await Order.create(newOrder);
+      await myOrder.populate([
+        { path: 'products.productId' },
+        { path: 'shippingAddress' },
+        { path: 'user', select: '-password -updatedAt -__v' }
+      ]);
+      const htmlContent = processOrderEmailTemplate(myOrder, firstname, lastname, email, phoneNo);
+      await sendEmail(email, 'Order confirmation', htmlContent);
 
+    }
     if (myOrder) {
       const update = myOrder.products.map((item) => {
         return {
@@ -161,11 +194,10 @@ const checkOut = asyncHandler(async (req, res) => {
   }
 });
 
-//get all orders
-const getOrders = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+// Get user's orders
+const myOrders = asyncHandler(async (req, res) => {
   try {
-    const orders = await Order.find({ user: _id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
     if (!orders.length) {
       return res.status(404).json({ error: "Orders not found" });
     }
@@ -181,14 +213,68 @@ const getOrders = asyncHandler(async (req, res) => {
   }
 });
 
-//get Order by Id
-
-const getOrderById = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+// Get a user's orders (Admin route)
+const userOrders = asyncHandler(async (req, res) => {
   const { id } = req.params;
   try {
-    const order = await Order.findOne({ user: _id, _id: id }).populate([
-      { path: 'products.productId'}, {path: 'shippingAddress'}, {path: 'user', select: '-password -updatedAt -__v'},
+    const orders = await Order.find({ user: id }).populate([
+      { path: 'products.productId' },
+      { path: 'shippingAddress' },
+      { path: 'user', select: '-password -updatedAt -__v' },
+    ]);
+    if (!orders.length) {
+      return res.status(404).json({ error: "User has no orders" });
+    }
+    res.status(200).json({
+      message: 'Orders fetched successfully',
+      orders,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get all orders (Admin route)
+const allOrders = asyncHandler(async (req, res) => {
+  // Extract query parameters from the request
+  const { paymentStatus, orderStatus } = req.query;
+
+  try {
+    // Build the query object based on the provided parameters
+    let query = {};
+    if (paymentStatus) query.paymentStatus = paymentStatus;
+    if (orderStatus) query.orderStatus = orderStatus;
+
+    // Fetch orders based on the query
+    const orders = await Order.find(query).populate([
+      { path: 'products.productId' },
+      { path: 'shippingAddress' },
+      { path: 'user', select: '-password -updatedAt -__v' },
+    ]);
+
+    if (!orders.length) {
+      return res.status(404).json({ error: "No orders found" });
+    }
+
+    res.status(200).json({
+      message: 'Orders fetched successfully',
+      orders,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get order by id
+const getOrderById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findOne({ _id: id }).populate([
+      { path: 'products.productId' },
+      { path: 'shippingAddress' },
+      { path: 'user', select: '-password -updatedAt -__v' },
     ]);
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
@@ -199,7 +285,57 @@ const getOrderById = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-export {checkOut, getOrders, getOrderById}
+
+//delete order
+const deleteOrder = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findByIdAndDelete(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.status(200).json({ message: 'Order deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update order status to delivered
+const confirmDelivery = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    order.orderStatus = "delivered";
+    if (order.paymentMethod === 'cashOnDelivery') {
+      order.paymentStatus = "paid";
+      order.paidAt = new Date();
+    }
+    order.deliveredAt = new Date();
+    await order.save();
+    res.status(200).json({ 
+      message: 'Order status updated to delivered',
+      order: order
+     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+export {
+  checkOut,
+  getOrderById, 
+  myOrders, 
+  userOrders, 
+  confirmDelivery, 
+  allOrders,
+  deleteOrder,
+ };

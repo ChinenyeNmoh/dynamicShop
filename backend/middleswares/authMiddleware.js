@@ -7,17 +7,16 @@ const protect = asyncHandler(async (req, res, next) => {
   let token = req.cookies.jwtToken;
   console.log('Token:', token);
   if(!token && !req.user){
+    
     return res.status(400).json({
       message: "Log in to continue",
     });
   }
-
   if (req.isAuthenticated()) {
     console.log('User is authenticated with Passport');
     return next();
-  }
-
-  if (token) {
+  }else if (!req.isAuthenticated()){
+    if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log('Decoded token:', decoded);
@@ -33,6 +32,7 @@ const protect = asyncHandler(async (req, res, next) => {
     res.status(401);
     throw new Error('Not authorized, no token');
   }
+}
 });
 
 

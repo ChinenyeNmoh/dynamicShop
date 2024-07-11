@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 // Declare the Schema of the Mongo model
 const  couponSchema = new mongoose.Schema({
-    name: {
+    title: {
       type: String,
       required: true,
       unique: true,

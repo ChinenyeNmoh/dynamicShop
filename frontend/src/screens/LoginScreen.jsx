@@ -49,7 +49,6 @@ const LoginScreen = () => {
           navigate('/');
         }).catch((err) => {
           console.log(err);
-          toast.error('Invalid token');
         });
       } catch (err) {
         console.log(err);

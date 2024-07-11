@@ -105,7 +105,6 @@ const getCart = asyncHandler(async (req, res) => {
     if (!userCart) {
       return res.status(404).json({ error: 'Cart not found' });
     }else{
-      console.log(userCart)
       await userCart.populate({ path: 'products.productId', select: '-updatedAt -__v' })
       return res.status(200).json({
         cart: userCart
@@ -209,7 +208,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   const { _id } = req.user;
 
   try {
-    const validCoupon = await Coupon.findOne({ name: coupon });
+    const validCoupon = await Coupon.findOne({ title: coupon });
     if (!validCoupon) {
       return res.status(404).json({ error: 'Invalid coupon' });
     }

@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { useCreateCartMutation } from '../slices/cartApiSlice';
 import { useEffect } from 'react';
 import Loader from '../components/Loader';
+import { useGetProductsQuery } from '../slices/productSlice';
 
 const WishScreen = () => {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ const WishScreen = () => {
   const { wishItems } = wish;
   console.log("wishitems",wishItems);
   const [ cartData, {isLoading: cartLoading, error: cartError} ] = useCreateCartMutation();
+  const { data, isLoading, error } = useGetProductsQuery({});
+  const products = data?.products || [];
+  console.log("products",products);
+  console.log("Error",error);
 
   useEffect(() => {
     if(cartError) {
@@ -64,32 +69,32 @@ const WishScreen = () => {
                     <span className='fw-bold me-1'>Name:</span>
                     <strong className='text-center mb-0'>{item.name}</strong>
                   </Card.Title>
-                  {item.quantity === 0 ? (
-          <div>
-            {item.discountedPrice > 0 ? (
-              <Card.Text as='h5' className='text-decoration-line-through'>
-                ${item.discountedPrice} <span className='text-danger'>sold</span>
-              </Card.Text>
-            ) : (
-              <Card.Text as='h5' className='text-decoration-line-through'>
-                ${item.price} <span className='text-danger'>sold</span>
-              </Card.Text>
-            )}
-          </div>
-        ) : (
-          <>
-            {item.discountedPrice > 0 ? (
-              <Card.Text as='p'>
-                <span className='text-muted text-decoration-line-through'>Original Price: ${item.price}</span><br />
-                <span className='fw-bold'>Discounted Price: ${item.discountedPrice}</span>
-              </Card.Text>
-            ) : (
-              <Card.Text as='h5'>
-                ${item.price}
-              </Card.Text>
-            )}
-          </>
-        )}
+                  {products.some((product) => product._id === item._id && product.quantity === 0) ? (
+  <div>
+    {products.some((product) => product._id === item._id && product.discountedPrice > 0 )? (
+      <Card.Text as='h5' className='text-decoration-line-through'>
+        ${products.find((product) => product._id === item._id).discountedPrice} <span className='text-danger'>sold</span>
+      </Card.Text>
+    ) : (
+      <Card.Text as='h5' className='text-decoration-line-through'>
+        ${products.find((product) => product._id === item._id).price} <span className='text-danger'>sold</span>
+      </Card.Text>
+    )}
+  </div>
+) : (
+  <>
+    {products.some((product) => product._id === item._id && product.discountedPrice > 0) ? (
+      <Card.Text as='p'>
+        <span className='text-muted text-decoration-line-through'>Original Price: ${products.find((product) => product._id === item._id).price}</span><br />
+        <span className='fw-bold'>Discounted Price: ${products.find((product) => product._id === item._id).discountedPrice}</span>
+      </Card.Text>
+    ) : (
+      <Card.Text as='h5'>
+        ${products.find((product) => product._id === item._id)?.price}
+      </Card.Text>
+    )}
+  </>
+)}
                   <div className='d-flex justify-content-between '>
                     <Button
                       className=" text-danger btn btn-link text-decoration-none"
@@ -99,9 +104,10 @@ const WishScreen = () => {
                       Remove
                     </Button>
                     <Button
-                      className="text-success btn btn-link text-decoration-none"
+                    variant='light'
+                      className="btn btn-link text-decoration-none"
                       type="button"
-                      disabled={item.quantity === 0}
+                      disabled={products.some((product) => product._id === item._id && product.quantity === 0)}
                       onClick={() => addToCartHandler(item)}
                     >
                       <FaShoppingCart className='text-success me-1' />

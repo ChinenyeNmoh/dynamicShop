@@ -1,42 +1,63 @@
-import { Link, useParams } from 'react-router-dom';
-import { Row, Col, ListGroup, Image, Card } from 'react-bootstrap';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Row, Col, ListGroup, Image, Card, Button } from 'react-bootstrap';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
-import { useGetOrderQuery } from '../slices/orderApiSlice';
+import { useGetOrderQuery, useUpdateOrderMutation, useDeleteOrderMutation } from '../slices/orderApiSlice';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 const OrderDetailScreen = () => {
   const { id } = useParams();
-  const { data, isLoading, error } = useGetOrderQuery(id);
-  const order = data?.order;
+  const navigate = useNavigate();
+  const { data, isLoading, error, refetch } = useGetOrderQuery(id);
+  const order = data?.order || {};
+  const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
+  const [deleteOrder, { isLoading: isDeleting }] = useDeleteOrderMutation();
+  const { userInfo } = useSelector((state) => state.auth);
+
+  const deliverHandler = async () => {
+    try {
+      await updateOrder(id).unwrap();
+      refetch();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteHandler = async () => {
+    try {
+      const res = await deleteOrder(id).unwrap();
+      toast.success(res?.message);
+      navigate('/admin/orders');
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return isLoading ? (
     <Loader />
   ) : error ? (
-    <Message variant='danger'>{error}</Message>
+    <Message variant='danger'>{error?.data?.message || error.error}</Message>
   ) : (
     <>
-      <h3 className='text-success mb-4'>Order {order._id.toString().substring(0,7)}</h3>
+      <h3 className='text-success mb-4'>Order {order._id?.toString().substring(0, 7)}</h3>
       <Row>
         <Col md={8}>
           <ListGroup variant='flush'>
             <ListGroup.Item>
               <h3 className='mb-3'>Shipping</h3>
               <p>
-                <strong> Recipient Name:</strong> {order.shippingAddress.recipientName}
-                </p>
-                <p>
-                <strong>Recipient Phone No:</strong> {order.shippingAddress.recipientMobile}
-                </p>
+                <strong>Recipient Name:</strong> {order.shippingAddress?.recipientName}
+              </p>
               <p>
-                <strong>Address:</strong>
-                {order.shippingAddress.street}, {order.shippingAddress.city}{' '}
-                {order.shippingAddress.landmark},{' '}{order.shippingAddress.state}{' '}
-                {order.shippingAddress.country}
+                <strong>Recipient Phone No:</strong> {order.shippingAddress?.recipientMobile}
+              </p>
+              <p>
+                <strong className='me-1'>Address:</strong>
+                {order.shippingAddress?.street}, {order.shippingAddress?.city} {order.shippingAddress?.landmark}, {order.shippingAddress?.state} {order.shippingAddress?.country}
               </p>
               {order.orderStatus === 'delivered' ? (
-                <Message variant='success'>
-                  Delivered on {order.deliveredAt}
-                </Message>
+                <Message variant='success'>Delivered on {order.deliveredAt}</Message>
               ) : (
                 <Message variant='danger'>Not Delivered</Message>
               )}
@@ -56,12 +77,12 @@ const OrderDetailScreen = () => {
             </ListGroup.Item>
 
             <ListGroup.Item>
-            <h3 className='text-success'>Purchased Items</h3>
-              {order.products.length === 0 ? (
+              <h3 className='text-success'>Purchased Items</h3>
+              {order.products?.length === 0 ? (
                 <Message>Order is empty</Message>
               ) : (
                 <ListGroup variant='flush'>
-                  {order.products.map((item, index) => (
+                  {order.products?.map((item, index) => (
                     <ListGroup.Item key={index}>
                       <Row>
                         <Col md={1}>
@@ -102,11 +123,11 @@ const OrderDetailScreen = () => {
               </ListGroup.Item>
               {order.totalAfterCoupon > 0 && (
                 <ListGroup.Item>
-                <Row>
-                  <Col className='fw-bold'>TotalAfterCoupon</Col>
-                  <Col>N{order.totalAfterCoupon}</Col>
-                </Row>
-              </ListGroup.Item>
+                  <Row>
+                    <Col className='fw-bold'>Total After Coupon</Col>
+                    <Col>N{order.totalAfterCoupon}</Col>
+                  </Row>
+                </ListGroup.Item>
               )}
               <ListGroup.Item>
                 <Row>
@@ -126,8 +147,29 @@ const OrderDetailScreen = () => {
                   <Col>N{order.totalPrice}</Col>
                 </Row>
               </ListGroup.Item>
-              {/* PAY ORDER PLACEHOLDER */}
-              {/* {MARK AS DELIVERED PLACEHOLDER} */}
+              {isUpdating && <Loader />}
+              {userInfo && userInfo.user?.role === 'admin' && (
+                <div className='d-flex'>
+                  <ListGroup.Item>
+                    <Button
+                      variant='success'
+                      type='button'
+                      onClick={() => deliverHandler(order._id)}
+                    >
+                      Deliver Order
+                    </Button>
+                  </ListGroup.Item>
+                  <ListGroup.Item>
+                    <Button
+                      variant='danger'
+                      type='button'
+                      onClick={() => deleteHandler(order._id)}
+                    >
+                      Delete Order
+                    </Button>
+                  </ListGroup.Item>
+                </div>
+              )}
             </ListGroup>
           </Card>
         </Col>

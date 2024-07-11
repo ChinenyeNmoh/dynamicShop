@@ -13,6 +13,7 @@ import Cart from '../models/cartModel.js';
 // @route   POST /api/users/auth
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
+  
   const { email, password } = req.body;
   const user = await User.findOne({ "local.email": email })
   if (user && (await user.isPasswordMatched(password))) {
@@ -341,13 +342,8 @@ const updatePassword = asyncHandler(async (req, res) => {
 // @desc    Logout user / clear cookie
 // @route   POST /api/users/logout
 // @access  Public
-// @desc    Logout user / clear cookie
-// @route   POST /api/users/logout
-// @access  Public
 const logOut = asyncHandler(async (req, res) => {
   let token = req.cookies.jwtToken || "";
-  console.log('Token:', token);
-
   if (token) {
     // Clear the JWT token
     res.cookie('jwtToken', '', {
@@ -381,39 +377,7 @@ const logOut = asyncHandler(async (req, res) => {
     });
 });
 
-// @desc    Block user
-const blockUser = asyncHandler(async(req, res) => {
-  const { id } = req.params;
-  const user = await User.findById(id);
-  if (!user) {
-    res.status(400);
-    throw new Error("No user found with this id");
-  }else{
-    await User.findByIdAndUpdate(
-      id,
-      { isBlocked: true },
-      { new: true }
-    );
-    res.status(200).send({ message: "User blocked successfully" });
-  }
-});
 
-// @desc    unBlock user
-const unBlockUser = asyncHandler(async(req, res) => {
-  const { id } = req.params;
-  const user = await User.findById(id);
-  if (!user) {
-    res.status(400);
-    throw new Error("No user found with this id");
-  }else{
-    await User.findByIdAndUpdate(
-      id,
-      { isBlocked: false },
-      { new: true }
-    );
-    res.status(200).send({ message: "User unblocked successfully" });
-  }
-});
 
 // @desc    delete user
 const deleteUser = asyncHandler(async(req, res) => {
@@ -436,12 +400,16 @@ const updateUser = asyncHandler(async(req, res) => {
     res.status(400);
     throw new Error("No user found with this id");
   }else{
-    await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       id,
       req.body,
       { new: true }
     );
-    res.status(200).send({ message: "User updated successfully" });
+    res.status(200).send({ 
+      message: "User updated successfully",
+      user: updatedUser
+
+     });
   }
 });
 
@@ -452,7 +420,7 @@ const getUsers = asyncHandler(async(req, res) => {
     res.status(400);
     throw new Error("No user found");
   }else{
-    res.status(200).send({ message: "Users fetched successfully", data: users });
+    res.status(200).send({ message: "Users fetched successfully", users: users });
   }
 });
 
@@ -463,9 +431,12 @@ const myProfile = asyncHandler(async(req, res) => {
     res.status(400);
     throw new Error("No user found with this id");
   }else{
-    res.status(200).send({ message: "User fetched successfully", data: user });
+    res.status(200).send({ message: "User fetched successfully",  user });
   }
 })
+
+
+
 // @desc  user profile
 const getUser = asyncHandler(async(req, res) => {
   const { id } = req.params;
@@ -474,7 +445,7 @@ const getUser = asyncHandler(async(req, res) => {
     res.status(400);
     throw new Error("No user found with this id");
   }else{
-    res.status(200).send({ message: "User fetched successfully", data: user });
+    res.status(200).send({ message: "User fetched successfully", user: user });
   }
 })
 
@@ -487,16 +458,19 @@ const updateMyProfile = asyncHandler(async(req, res) => {
     throw new Error("No user found with this id");
   }else{
     const newUser = {
-      "local.firstname": req.body.firstname ? req.body.firstname : req.user.local.firstname,
-      "local.lastname": req.body.lastname ? req.body.lastname : req.user.local.lastname,
-      "address": req.body.address ? req.body.address : req.user.address
+      "local.firstname": req.body.firstname ? req.body.firstname : user.local.firstname,
+      "local.lastname": req.body.lastname ? req.body.lastname : user.local.lastname,
+      "local.mobile": req.body.mobile? req.body.mobile : "",
+      "address": req.body.address ? req.body.address : user.address
     };
-    await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       newUser,
-      { new: true }
+      { new: true,runValidators: true }
     );
-    res.status(200).send({ message: "User updated successfully", data: user });
+    res.status(200).send({ 
+      message: "User updated successfully", 
+      user: updatedUser});
   }
 });
 
@@ -534,8 +508,6 @@ export {
   resetPassword,
   forgotPassword,
   authUser,
-  blockUser,
-  unBlockUser,
   updateUser,
   deleteUser,
   getUsers,

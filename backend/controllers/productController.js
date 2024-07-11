@@ -23,6 +23,7 @@ const createProduct = asyncHandler(async (req, res) => {
   
 // get a product
 const getProduct = asyncHandler(async (req, res) => {
+ 
   const { id } = req.params;
 
   const product = await Product.findById(id).populate('ratings.postedby', 'local.email');
@@ -36,62 +37,65 @@ const getProduct = asyncHandler(async (req, res) => {
     throw new Error(`Product with id ${id} not found`);
   }
 });
-  
+
+
 // get all products
-
 const getAllProduct = asyncHandler(async (req, res) => {
-  // Filtering
-  const queryObj = { ...req.query };
-  const excludeFields = ["page", "sort", "limit", "fields"];
-  excludeFields.forEach((el) => delete queryObj[el]);
+  const { productType, category, sort, page = 1, limit = 10, sale } = req.query;
+  let query = {};
+  let sortBy = {};
 
-  // Convert to string and back to JSON
-  let queryStr = JSON.stringify(queryObj);
-  queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-  const query = Product.find(JSON.parse(queryStr));
+  // Filtering
+  if (productType) query.productType = productType;
+  if (category) query.category = category;
+  if (sale) {
+    query.discountedPrice = { $gt: 0 };
+  }
 
   // Sorting
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(',').join(' ');
-    query.sort(sortBy);
-  } else {
-    query.sort("-createdAt");
+  switch (sort) {
+    case 'high':
+      sortBy.price = -1;
+      sortBy.discountedPrice = { $exists: true, $ne: null };
+        sortBy.discountedPrice = -1;
+        
+        break;
+    case 'low':
+      sortBy.price = 1;
+        sortBy.discountedPrice = { $exists: true, $ne: null };
+        sortBy.discountedPrice = 1;
+        
+        break;
+    case 'old':
+      sortBy.createdAt = 1;
+      break;
+    case 'rating':
+      sortBy.totalrating = -1;
+      break;
+    case 'alphabetical':
+      sortBy.name = 1;
+      break;
+    default:
+      sortBy.createdAt = -1; // Default sorting by newest
   }
 
-  // Limit fields
-  if (req.query.fields) {
-    const fields = req.query.fields.split(",").join(" ");
-    query.select(fields);
-  } else {
-    query.select("-__v");
-  }
+  try {
+   
+    const products = await Product.find(query).sort(sortBy).populate('category productType');
 
-  // Pagination
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
-  const skip = (page - 1) * limit;
-  query.skip(skip).limit(limit);
-
-  if (req.query.page) {
-    const productCount = await Product.countDocuments();
-    if (skip >= productCount) {
-      res.status(404);
-      throw new Error('Page not found');
+    if (products && products.length > 0) {
+      return res.status(200).json({
+        message: 'Products retrieved',
+        products
+      });
+    } else {
+      return res.status(404).json({ message: 'Sorry, no product found' });
     }
-  }
-
-  // Execute query
-  const products = await query.exec();
-
-  if (products && products.length > 0) {
-    return res.status(200).json({
-      products: products,
-    });
-  } else {
-    res.status(404);
-    throw new Error('Sorry, no product found');
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
+
 
 
 //search products

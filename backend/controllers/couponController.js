@@ -1,15 +1,20 @@
 import Coupon from "../models/couponModel.js";
 import asyncHandler from "express-async-handler";
+import { v4 as uuidv4, v4 } from 'uuid';
 
 // Create coupon
 const createCoupon = asyncHandler(async (req, res) => {
-    const { name, discount } = req.body;
-    const existingCoupon = await Coupon.findOne({ name });
-    if (existingCoupon) {
-        return res.status(400).json({ error: "Coupon already exists" });
-    }
-    const coupon = await Coupon.create({ name, discount });
-    return res.status(201).json({ message: "Coupon created successfully", coupon });
+     // Generate a unique identifier
+     const n = v4();
+     // Create a new coupon with a unique name and a fixed discount
+     const coupon = await Coupon.create({ 
+         title: 'test' + n.toString().substring(0, 3), 
+         discount: 10 
+     });
+     return res.status(201).json({ 
+         message: "Coupon created successfully", 
+         coupons: coupon 
+     });
 });
 
 // Get all coupons
@@ -44,7 +49,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
     if (!coupon) {
         return res.status(404).json({ error: "Coupon not found" });
     }
-    coupon.name = req.body.name || coupon.name;
+    coupon.name = req.body.title || coupon.title;
     coupon.discount = req.body.discount || coupon.discount;
     const updatedCoupon = await coupon.save();
     return res.status(200).json({

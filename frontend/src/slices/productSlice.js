@@ -4,20 +4,35 @@ import { apiSlice } from './apiSlice';
 export const productSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query({
-      query: ({ category = '', productType = '' }) => {
+      query: ({ category = '', productType = '', sort = '', sale, page = 1, limit = 10 }) => {
         let url = PRODUCTS_URL;
-        
-        if (category && productType) {
-          url = `${PRODUCTS_URL}?category=${category}&productType=${productType}`;
-        } else if (category) {
-          url = `${PRODUCTS_URL}?category=${category}`;
-        } else if (productType) {
-          url = `${PRODUCTS_URL}?productType=${productType}`;
+        const params = new URLSearchParams();
+
+        if (category) {
+          params.append('category', category);
         }
-        
+
+        if (productType) {
+          params.append('productType', productType);
+        }
+
+        if (sort) {
+          params.append('sort', sort);
+        }
+
+        if (sale) {
+          params.append('sale', sale);
+        }
+
+        params.append('page', page);
+        params.append('limit', limit);
+
+        url = `${PRODUCTS_URL}?${params.toString()}`;
+
         return { url };
       },
       keepUnusedDataFor: 5,
+      providesTags: ['Products'],
     }),
     getProductDetails: builder.query({
       query: (productId) => ({
@@ -25,6 +40,16 @@ export const productSlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
+    createProduct: builder.mutation({
+      query: (data) => ({
+        url: PRODUCTS_URL,
+        method: 'POST',
+        body: data,
+      }),
+      //getproducts function with validate Products Tag will automatically refetch since we are 
+      //invalidating the tag here, ensuring that the newly created product is included in the updated list.
+      invalidatesTags: ['Products'],
+    })
   }),
   
 });

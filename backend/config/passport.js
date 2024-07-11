@@ -18,6 +18,7 @@ const configurePassport = (passport) => {
           "google.firstname": email.name.givenName,
           "google.lastname": email.name.familyName,
           "google.email": email.emails[0].value,
+          isVerified: true,
         };
 
         try {
@@ -88,6 +89,7 @@ const configurePassport = (passport) => {
           "facebook.firstname": profile._json.first_name,
           "facebook.lastname": profile._json.last_name,
           "facebook.email": profile._json.email,
+          isVerified: true,
         };
 
         try {

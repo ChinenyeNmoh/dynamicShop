@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 
 const sendEmail = async (email, subject, html) => {
 	try {
+
         
 		const transporter = nodemailer.createTransport({
 			host: process.env.HOST,
@@ -12,7 +13,7 @@ const sendEmail = async (email, subject, html) => {
 				pass: process.env.PASS,
 			},
 		});
-
+       
 		await transporter.sendMail({
 			from: process.env.USER,
 			to: email,

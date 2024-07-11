@@ -9,6 +9,7 @@ import addressRoutes from './routes/addressRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import enquiryRoutes from './routes/enquiryRoutes.js';
 import { notFound, errorHandler } from './middleswares/errorMiddleware.js'
 import connectDB from "./config/db.js"
 import cookieParser from 'cookie-parser';
@@ -91,6 +92,14 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/enquiries', enquiryRoutes);
+
+
+ // get paypal client id from environment variables for production mode.
+ //we dont want to save it in the frontend because it is sensitive information
+ app.get('/api/config/paypal', (req, res) =>
+  res.send({ clientId: process.env.PAYPAY_ID })
+);
 app.use(notFound);
 app.use(errorHandler);
 
