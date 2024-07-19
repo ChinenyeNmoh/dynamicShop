@@ -13,16 +13,24 @@ export const enquirySlice = apiSlice.injectEndpoints({
             },
         }),
         getEnquiries: builder.query({
-            query: (status) => {
-                let url = `${ENQUIRY_URL}/`;
+            query: ({ status, page=1, keyword='' }) => {
+                const params = new URLSearchParams();
                 if (status) {
-                    url = `${ENQUIRY_URL}/?status=${status}`;
+                    params.append('status', status);
                 }
-                return url;
+                if (keyword) {
+                    params.append('keyword', keyword);
+                }
+                if (page) {
+                    params.append('page', page);
+                }
+        
+                const url = `${ENQUIRY_URL}/?${params.toString()}`;
+                return { url };
             },
-                    keepUnusedDataFor: 5,
-                    validatesTags: ['Enquiry'],
-        }),
+            keepUnusedDataFor: 5,
+            providesTags: ['Enquiry'],
+        }),        
     updateEnquiry: builder.mutation({
         query: (id) => {
             return {

@@ -7,7 +7,7 @@ import Token from '../models/tokenModel.js';
 import passwordResetToken from '../models/passwordTokenModel.js';
 import {sendEmail, emailVerificationTemplate, passwordResetTemplate} from '../utils/mail.js';
 import jwt from 'jsonwebtoken';
-import Cart from '../models/cartModel.js';
+import Product from '../models/productModel.js';
 
 // @desc    Auth user & get token
 // @route   POST /api/users/auth
@@ -15,7 +15,7 @@ import Cart from '../models/cartModel.js';
 const authUser = asyncHandler(async (req, res) => {
   
   const { email, password } = req.body;
-  const user = await User.findOne({ "local.email": email })
+  const user = await User.findOne({ "local.email": email }).populate('wishlist')
   if (user && (await user.isPasswordMatched(password))) {
     console.log("user password match")
     if (!user.isVerified) {
@@ -53,7 +53,6 @@ const authUser = asyncHandler(async (req, res) => {
     if (userResponse.facebook) {
       delete userResponse.facebook.facebookId;
     }
-
     res.json({
       user: userResponse,
     });
@@ -413,15 +412,70 @@ const updateUser = asyncHandler(async(req, res) => {
   }
 });
 
-// @desc    get all users
-const getUsers = asyncHandler(async(req, res) => {
-  const users = await User.find({});
-  if (!users) {
-    res.status(400);
-    throw new Error("No user found");
-  }else{
-    res.status(200).send({ message: "Users fetched successfully", users: users });
+
+// @desc    Get all users
+const getUsers = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const keyword = req.query.keyword;
+
+  // Build the query object based on the keyword
+  let query = {};
+  if (keyword) {
+    const lowerKeyword = keyword.toLowerCase();
+    query = {
+      $or: [
+        { 'local.firstname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'local.lastname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'local.email': { $regex: lowerKeyword, $options: 'i' } },
+        { 'google.firstname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'google.lastname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'google.email': { $regex: lowerKeyword, $options: 'i' } },
+        { 'facebook.firstname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'facebook.lastname': { $regex: lowerKeyword, $options: 'i' } },
+        { 'facebook.email': { $regex: lowerKeyword, $options: 'i' } },
+      ],
+    };
   }
+
+  // Get the total count of matching users
+  const count = await User.countDocuments(query);
+
+  // Fetch users based on the query and pagination
+  const users = await User.find(query)
+    .limit(limit)
+    .skip(limit * (page - 1));
+
+  if (users.length === 0) {
+    return res.status(404).json({ error: "No users found" });
+  }
+
+  // Sort users based on available names (if sorting in-memory)
+  users.sort((a, b) => {
+    const getName = (user) => {
+      if (user.local && user.local.firstname) return user.local.firstname;
+      if (user.google && user.google.firstname) return user.google.firstname;
+      if (user.facebook && user.facebook.firstname) return user.facebook.firstname;
+      return ''; // Default to an empty string if no name is found
+    };
+
+    // Convert names to lowercase so that sorting is case-insensitive
+    const nameA = getName(a).toLowerCase();
+    const nameB = getName(b).toLowerCase();
+
+    // Sort alphabetically by name
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  });
+
+  res.status(200).json({
+    message: "Users fetched successfully",
+    page,
+    totalPages: Math.ceil(count / limit),
+    totalCount: count,
+    users,
+  });
 });
 
 // @desc  my user profile
@@ -474,6 +528,52 @@ const updateMyProfile = asyncHandler(async(req, res) => {
   }
 });
 
+// @desc   add to wishlist
+const addToWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+    const product = await Product.findById(productId);
+    if (!product) {
+      res.status(404);
+      throw new Error('Product not found');
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const productExist = user.wishlist.some((p) => p.toString() === productId.toString());
+    if (productExist) {
+      res.status(400);
+      throw new Error('Product already in wishlist');
+    }
+
+    user.wishlist.push(productId);
+    await user.save();
+    await user.populate('wishlist');
+
+    res.status(200).json({ message: 'Product added to wishlist', user });
+
+});
+
+// @desc   remove from wishlist
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { wishlist: productId } },
+      { new: true }
+    ).populate('wishlist');
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    res.status(200).json({ message: 'Product removed from wishlist', user });
+});
+
+
 const sendData = asyncHandler(async (req, res) => {
   if (!req.user) {
     res.status(401);
@@ -486,6 +586,7 @@ const sendData = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error('User not found');
     }
+    await user.populate('wishlist');
 
     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
       expiresIn: '1h',
@@ -513,6 +614,7 @@ export {
   getUsers,
   myProfile,
   updateMyProfile,
-  getUser
-  
+  getUser,
+  addToWishlist,
+  removeFromWishlist,
 };

@@ -1,3 +1,6 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import express from "express";
 import dotenv from "dotenv";
 import userRoutes from './routes/userRoutes.js';
@@ -18,9 +21,7 @@ import passport from 'passport';
 import configurePassport from "./config/passport.js";
 import session from 'express-session';
 import MongoStore from "connect-mongo";
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+
 import cors from "cors";
 
 
@@ -84,7 +85,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // route handlers
 app.use('/api/users', userRoutes);
-app.use('/api/image', imageRoutes);
+app.use('/api/images', imageRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/types', typeRoutes);

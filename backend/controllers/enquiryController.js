@@ -3,15 +3,34 @@ import asyncHandler from 'express-async-handler';
 
 // @desc    Get all enquiries
  const getEnquiries = asyncHandler(async (req, res) => {
-    const { status } = req.query;
+    const { status, keyword } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+
     let query =  {} ;
     if (status) query.status = status;
-    const enquiries = await Enquiry.find(query);
-    if (!enquiries.length) {
+    if(keyword){
+        query = {
+            $or: [
+                { name: { $regex: keyword, $options: 'i' } },
+                { email: { $regex: keyword, $options: 'i' } },
+            ],
+        };
+    }
+    const count = await Enquiry.countDocuments(query);
+    const enquiries = await Enquiry.find(query)
+    .sort({ name: 1 })
+    .limit(limit)
+    .skip((page - 1) * limit);
+    if (count === 0) {
         return res.status(404).json({ error: "No enquiries found" });
     }
     return res.status(200).json({
         message: "Enquiries retrieved successfully",
+        page,
+        totalCount: count,
+        totalPages: Math.ceil(count / limit),
         enquiries,
     });
 });

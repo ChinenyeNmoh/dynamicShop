@@ -1,24 +1,35 @@
 import Product from '../models/productModel.js';
 import asyncHandler from "express-async-handler";
+import { v4 as uuidv4, v4 } from 'uuid';
+import { Types } from 'mongoose';
+
 
 
 // Create new product
+// Create new product
 const createProduct = asyncHandler(async (req, res) => {
-  const findProduct = await Product.findOne({ name: req.body.name });
-  if (findProduct) {
-    throw new Error(`${req.body.name} product already exists`);
+  try {
+    const n = uuidv4();
+    const newProduct = {
+      name: 'sample name' + n,
+      description: 'sample description',
+      price: 0,
+      images: [{url:'sample image'}],
+      quantity: 0,
+      productType: new Types.ObjectId('60f1f1b3b3b3b3b3b3b3b3b3'),
+  category: new Types.ObjectId('60f1f1b3b3b3b3b3b3b3b3b3'),
+    };
+    const product = await Product.create(newProduct);
+    return res.json({
+      message: 'New product created',
+      data: product,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
   }
-
-  const imagesArray = [{ url: req.body.images }];
-  req.body.images = imagesArray;
-
-  const newProduct = await Product.create(req.body);
-
-  return res.json({
-    message: `New product ${req.body?.name} created`,
-    data: newProduct,
-  });
 });
+
 
   
 // get a product
@@ -41,9 +52,12 @@ const getProduct = asyncHandler(async (req, res) => {
 
 // get all products
 const getAllProduct = asyncHandler(async (req, res) => {
-  const { productType, category, sort, page = 1, limit = 10, sale } = req.query;
+  const { productType, category, sort,  sale, keyword } = req.query;
   let query = {};
   let sortBy = {};
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 8;
+
 
   // Filtering
   if (productType) query.productType = productType;
@@ -79,14 +93,31 @@ const getAllProduct = asyncHandler(async (req, res) => {
       sortBy.createdAt = -1; // Default sorting by newest
   }
 
-  try {
-   
-    const products = await Product.find(query).sort(sortBy).populate('category productType');
+  if(keyword){
+    query = Product.find({
+      $or: [
+        {name: { $regex: keyword, $options: 'i' }},
+        { description: { $regex: keyword, $options: 'i' } },
+      ],
+    });
+  }
 
-    if (products && products.length > 0) {
+
+  try {
+    const count = await Product.countDocuments(query);
+    const products = await Product.find(query)
+    .sort(sortBy)
+    .limit(limit)
+    .skip(limit * (page - 1))
+    .populate('category productType');
+    if (products && count > 0) {
       return res.status(200).json({
         message: 'Products retrieved',
-        products
+        products,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+        totalCount: count,
       });
     } else {
       return res.status(404).json({ message: 'Sorry, no product found' });
@@ -98,55 +129,32 @@ const getAllProduct = asyncHandler(async (req, res) => {
 
 
 
-//search products
-const searchProduct = asyncHandler(async (req, res) => {
-  const { search } = req.query;
-  console.log("Search query", search);
-  if (!search) {
-    res.status(400);
-    throw new Error('Search query is required');
-  }
-  const products = await Product.find({
-    $or: [
-      { name: { $regex: search, $options: 'i' } },
-      {description: { $regex: search, $options: 'i' } },
-    ],
-  });
-  if(products && products.length > 0) {
-    return res.status(200).json({
-      products: products,
-    });
-  } else {
-    res.status(404);
-    throw new Error('Sorry, no product found');
-  }
-})
-
-
 //update product
 const updateProduct = asyncHandler(async (req, res) => {
-  console.log("i was hit oh");
   const { id } = req.params;
-  console.log(id);
-
+  
   const findProduct = await Product.findById(id);
-  console.log(findProduct);
 
   if (!findProduct) {
     res.status(404);
     throw new Error("Product not found");
   }
 
+  const nameExist = await Product.findOne({ name: req.body.name });
+  if (nameExist && nameExist._id.toString() !== id) {
+    res.status(400);
+    throw new Error(`Product with name ${req.body.name} already exists`);
+  }
   req.body.productType = req.body.productType ? req.body.productType : findProduct.productType;
   req.body.category = req.body.category ? req.body.category : findProduct.category;
   req.body.name = req.body.name ? req.body.name : findProduct.name;
   req.body.price = req.body.price ? req.body.price : findProduct.price;
-  req.body.description = req.body.description ? req.body.description : findProduct.description;
+  req.body.description = req.body.description ?  req.body.description :  findProduct.description;
   req.body.quantity = req.body.quantity ? req.body.quantity : findProduct.quantity;
-  req.body.images = req.body.images ? req.body.images : findProduct.images;
+  req.body.images = req.body.images ? [{url:req.body.images}] : findProduct.images;
   req.body.discountedPrice = req.body.discountedPrice ? req.body.discountedPrice : findProduct.discountedPrice;
 
-  const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
+  const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
 
   return res.status(200).json({
     message: "Product updated successfully",
@@ -160,7 +168,7 @@ const deleteProduct = asyncHandler(async(req, res) => {
       const product = await Product.findByIdAndDelete(id)
       if (product) {
         return res.status(200).json({
-          message: `Product with id ${id} deleted successfully`,
+          message: 'Product  deleted successfully',
           data: product,
         });
       } else {
@@ -173,6 +181,7 @@ const deleteProduct = asyncHandler(async(req, res) => {
   const productRating = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { star, prodId, comment } = req.body;
+    console.log(req.body);
   
     const product = await Product.findById(prodId);
     if (!product) {
@@ -183,21 +192,16 @@ const deleteProduct = asyncHandler(async(req, res) => {
     let rateProduct;
   
     let alreadyRated = product.ratings.find(userId => userId.postedby.toString() === _id.toString());
+    console.log(alreadyRated);
   
     if (alreadyRated) {
-      const updatedProd = await Product.updateOne(
-        {
-          ratings: { $elemMatch: alreadyRated },
-        },
-        {
-          $set: { "ratings.$.star": star, "ratings.$.comment": comment },
-        },
-        { new: true }
-      );
-  
+      alreadyRated.star = star;
+      alreadyRated.comment = comment;
+      alreadyRated.dateCreated = new Date();
+      await product.save();
       return res.status(200).json({
-        status: "success",
-        data: updatedProd,
+        message: "review added",
+        rating: product,
       });
     } else {
       rateProduct = await Product.findByIdAndUpdate(
@@ -215,10 +219,9 @@ const deleteProduct = asyncHandler(async(req, res) => {
           new: true,
         }
       );
-  
       res.status(200).json({
-        status: "success",
-        data: rateProduct,
+        message: "review added",
+        rating: rateProduct,
       });
     }
   
@@ -236,4 +239,4 @@ const deleteProduct = asyncHandler(async(req, res) => {
       { new: true }
     );
   });
-export { createProduct, getProduct, getAllProduct, updateProduct, deleteProduct,searchProduct, productRating}
+export { createProduct, getProduct, getAllProduct, updateProduct, deleteProduct, productRating}

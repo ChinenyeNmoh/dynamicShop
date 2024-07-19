@@ -49,7 +49,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
     if (!coupon) {
         return res.status(404).json({ error: "Coupon not found" });
     }
-    coupon.name = req.body.title || coupon.title;
+    coupon.title = req.body.title || coupon.title;
     coupon.discount = req.body.discount || coupon.discount;
     const updatedCoupon = await coupon.save();
     return res.status(200).json({

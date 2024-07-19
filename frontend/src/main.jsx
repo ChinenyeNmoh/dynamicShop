@@ -36,13 +36,17 @@ import CategoryScreen from './screens/Admin/CategoryScreen.jsx';
 import ProductTypeScreen from './screens/Admin/ProductTypeScreen.jsx';
 import CouponScreen from './screens/Admin/CouponsScreen.jsx';
 import AllEnquiriesScreen from './screens/Admin/AllEnquiresScreen.jsx';
+import AllProductsScreen from './screens/Admin/AllProductsScreen.jsx';
+import UpdateProductScreen from './screens/Admin/updateProductScreen.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<App />}>
       <Route index={true} path='/' element={<HomeScreen />} />
+      <Route path='/:page' element={<HomeScreen />} />
+      <Route path='/:keyword' element={<HomeScreen />} />
+      <Route path='/:keyword/:page' element={<HomeScreen />} />
       <Route path='/products/:id' element={<ProductScreen />} />
-      
       <Route path='/login' element={<LoginScreen />} />
       <Route path='/register' element={<RegisterScreen />} />
       <Route path='/forgotpassword' element={<ForgotPasswdScreen />} />
@@ -64,12 +68,26 @@ const router = createBrowserRouter(
     {/* Admin route. you have to be logged in as admin to access them */}
     <Route path='' element={<AdminRoute/>}>
     <Route path='/admin/orders' element={<AllOrderScreen />} />
+    <Route path='/admin/orders/:page' element={<AllOrderScreen />} />
+    <Route path='/admin/orders/:keyword' element={<AllOrderScreen />} />
+    <Route path='/admin/orders/:keyword/:page' element={<AllOrderScreen />} />
     <Route path='/admin/users' element={<AllUsersScreen />} />
+    <Route path='/admin/users/:page' element={<AllUsersScreen />} />
+    <Route path='/admin/users/:keyword' element={<AllUsersScreen />} />
+    <Route path='/admin/users/:keyword/:page' element={<AllUsersScreen />} />
     <Route path='/admin/user/:id/edit' element={<UpdateUserScreen />} />
     <Route path='/admin/categories' element={<CategoryScreen />} />
     <Route path='/admin/types' element={<ProductTypeScreen />} />
     <Route path='/admin/coupons' element={<CouponScreen />} />
     <Route path='/admin/enquires' element={<AllEnquiriesScreen />} />
+    <Route path='/admin/enquires/:page' element={<AllEnquiriesScreen />} />
+    <Route path='/admin/enquires/:keyword' element={<AllEnquiriesScreen />} />
+    <Route path='/admin/enquires/:keyword/:page' element={<AllEnquiriesScreen />} />
+    <Route path='/admin/products' element={<AllProductsScreen />} />
+    <Route path='/admin/products/:page' element={<AllProductsScreen />} />
+    <Route path='/admin/products/:keyword' element={<AllProductsScreen />} />
+    <Route path='/admin/products/:keyword/:page' element={<AllProductsScreen />} />
+    <Route path="/admin/product/:id/edit" element={<UpdateProductScreen />} />
     </Route>
   </Route >
 

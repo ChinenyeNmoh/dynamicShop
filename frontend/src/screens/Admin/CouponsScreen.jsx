@@ -41,10 +41,10 @@ const CouponsScreen = () => {
 
   const editCouponHandler = async (e) => {
     e.preventDefault();
-    if (title.trim() === '') {
+    if (title === '') {
       toast.error('Title cannot be empty');
       return;
-    } else if (discount.trim() === '') {
+    } else if (discount === '') {
       toast.error('Discount cannot be empty');
       return;
     }
@@ -88,7 +88,7 @@ const CouponsScreen = () => {
       {isLoading ? (
         <Loader />
       ) : error ? (
-        <Message variant='danger'>{error.data.message}</Message>
+        <Message variant='danger'>{error.data.message || 'No Coupon Available'}</Message>
       ) : (
         <>
           <Table striped bordered hover responsive className='table-sm'>

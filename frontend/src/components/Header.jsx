@@ -27,20 +27,16 @@ const Header = () => {
   const { data: typeData, refetch: refetchTypes } = useGetTypesQuery();
   const types = typeData?.types || [];
 
-// lets put the fetching of categories and types in a useEffect hook
-// so that it will be fetched when the component mounts and not when the component is rendered
-useEffect(() => {
-  refetchCategories();
-  refetchTypes();
-}, []);
+  useEffect(() => {
+    refetchCategories();
+    refetchTypes();
+  }, []);
 
   useEffect(() => {
     if (error?.data?.message === 'Log in to continue') {
       dispatch(deleteCredentials());
     }
   }, [error?.data?.message]);
-
-
 
   const handleLogout = async () => {
     try {
@@ -57,7 +53,11 @@ useEffect(() => {
   return (
     <header>
       {isLoading && <Loader />}
-      <Navbar bg='dark' variant='dark' expand='md' collapseOnSelect>
+      <Navbar 
+      bg='dark' 
+      variant='dark' 
+      expand='md' 
+      collapseOnSelect>
         <Container>
           <LinkContainer to='/'>
             <Navbar.Brand>DynamicShop</Navbar.Brand>
@@ -143,14 +143,41 @@ useEffect(() => {
                   ))}
               </NavDropdown>
 
+              {/* Sale Dropdown */}
+              <NavDropdown
+                id="nav-dropdown-dark-sale"
+                title="Sale"
+                menuVariant="dark"
+                className="me-3"
+              >
+                <LinkContainer to={{ pathname: '/', search: 'sale=true' }}>
+                  <NavDropdown.Item>All</NavDropdown.Item>
+                </LinkContainer>
+                {types.map((type) => (
+                  <div key={type._id}>
+                    {categories.map((cat) => (
+                      <LinkContainer
+                        key={cat._id}
+                        to={{ pathname: '/', search: `category=${cat._id}&productType=${type._id}&sale=true` }}
+                      >
+                        <NavDropdown.Item>
+                          {`${cat.title.charAt(0).toUpperCase() + cat.title.slice(1)} ${type.title.charAt(0).toUpperCase() + type.title.slice(1)}`}
+                        </NavDropdown.Item>
+                      </LinkContainer>
+                    ))}
+                  </div>
+                ))}
+              </NavDropdown>
+
+              {/* User Dropdown */}
               {userInfo ? (
                 <NavDropdown
                   title={
                     userInfo.user.local?.firstname
                       ? userInfo.user.local.firstname
                       : userInfo.user.facbook?.firstname
-                      ? userInfo.user.facebook.firstname
-                      : userInfo.user.google?.firstname
+                        ? userInfo.user.facebook.firstname
+                        : userInfo.user.google?.firstname
                   }
                   id='username'
                   className="me-3 ink"
@@ -177,6 +204,8 @@ useEffect(() => {
                   </LinkContainer>
                 </>
               )}
+
+              {/* Wishlist and Cart Links */}
               <LinkContainer to='/wishlist'>
                 <Nav.Link className="me-3 ink">
                   <FaHeart /> Wishlist
@@ -192,13 +221,15 @@ useEffect(() => {
                   )}
                 </Nav.Link>
               </LinkContainer>
+
+              {/* Admin Dropdown */}
               {userInfo && userInfo.user?.role === 'admin' && (
                 <NavDropdown 
-                title='Admin' 
-                id='adminmenu'
-                menuVariant="dark"
+                  title='Admin' 
+                  id='adminmenu'
+                  menuVariant="dark"
                 >
-                  <NavDropdown.Item as={Link} to='/admin/productlist'>
+                  <NavDropdown.Item as={Link} to='/admin/products'>
                     Products
                   </NavDropdown.Item>
                   <NavDropdown.Item as={Link} to='/admin/orders'>
@@ -221,26 +252,6 @@ useEffect(() => {
                   </NavDropdown.Item>
                 </NavDropdown>
               )}
-             <NavDropdown 
-  title='Sale' 
-  id='sale'
-  menuVariant="dark"
->
-  <LinkContainer to={{ pathname: '/', search: 'sale=true' }}>
-    <NavDropdown.Item>All</NavDropdown.Item>
-  </LinkContainer>
-  {types.map((type) => (
-    <LinkContainer
-      key={type._id}
-      to={{ pathname: '/', search: `productType=${type._id}&sale=${type.title}` }}
-    >
-      <NavDropdown.Item>
-        {type.title.charAt(0).toUpperCase() + type.title.slice(1)}
-      </NavDropdown.Item>
-    </LinkContainer>
-  ))}
-</NavDropdown>
-
             </Nav>
           </Navbar.Collapse>
         </Container>

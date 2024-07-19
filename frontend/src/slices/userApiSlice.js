@@ -4,7 +4,18 @@ import { apiSlice } from './apiSlice';
 export const userSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query({
-      query: () => `${USERS_URL}/allusers`,
+      query: ({page=1, keyword=""}) => {
+        let url;
+        const params = new URLSearchParams();
+        if(page){
+          params.append('page', page);
+        }
+        if(keyword){
+          params.append('keyword', keyword);
+        }
+        url = `${USERS_URL}/allusers?${params.toString()}`;
+        return { url };
+      },
       keepUnusedDataFor: 5,
     }),
     getUserDetails: builder.query({
@@ -67,6 +78,20 @@ export const userSlice = apiSlice.injectEndpoints({
         body: data,
       }),
     }),
+    addWish: builder.mutation({
+      query: (productId) => ({
+        url: `${USERS_URL}/addwish`,
+        method: 'PUT',
+        body: productId,
+      }),
+    }),
+    removeWish: builder.mutation({
+      query: (data) => ({
+        url: `${USERS_URL}/removewish`,
+        method: 'PUT',
+        body: data,
+      }),
+    }),
     getProfile: builder.query({
       query: () => `${USERS_URL}/profile`,
       keepUnusedDataFor: 5,
@@ -85,5 +110,7 @@ export const {
   useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation,
-  useGetUserDetailsQuery
+  useGetUserDetailsQuery,
+  useAddWishMutation,
+  useRemoveWishMutation,
  } = userSlice;

@@ -1,14 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from './slices/apiSlice';
 import cartSliceReducer from './slices/cartSlice';
-import wishSliceReducer from './slices/wishListSlice';
 import userSliceReducer from './slices/authSlice'
 
 const store = configureStore({
   reducer: {
     [apiSlice.reducerPath]: apiSlice.reducer,
     cart: cartSliceReducer,
-    wish: wishSliceReducer,
     auth: userSliceReducer,
   },
   /*This configures the middleware for the Redux store. It starts with the default middleware provided 

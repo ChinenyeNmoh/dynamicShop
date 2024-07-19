@@ -14,7 +14,9 @@ import {
   deleteUser,
   myProfile,
   updateMyProfile,
-  getUser
+  getUser,
+  addToWishlist,
+  removeFromWishlist
 } from '../controllers/userController.js';
 
 import { protect, ensureAdmin, ensureGuest, validateId} from '../middleswares/authMiddleware.js';
@@ -42,6 +44,8 @@ router
   .put(protect, updateMyProfile);
 
 router.get('/logout', protect, logOut);
+router.put('/addwish', protect, addToWishlist);
+router.put('/removewish', protect, removeFromWishlist);
 router.get("/:id/verify/:token/", validateId, verifyToken);
 router.post('/forgotpassword', ensureGuest, forgotPassword)
 router.get("/:id/resetpassword/:token/", ensureGuest, validateId, resetPassword);

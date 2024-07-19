@@ -14,7 +14,7 @@ export const apiSlice = createApi({
   baseQuery,
   
   // Define tag types used for cache invalidation and data refetching
-  tagTypes: ['Product', 'Order', 'User', 'Cart', 'Categories', 'Types', 'Enquiry', 'Coupon'],
+  tagTypes: ['Product', 'Order', 'User', 'Cart', 'Categories', 'Types', 'Enquiry', 'Coupon', 'Address'],
 
 
   // Define the endpoints for this API slice using a builder function

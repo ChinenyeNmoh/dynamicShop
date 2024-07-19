@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       trim: true,
+      unique: true,
     },
     description: {
       type: String,
@@ -43,6 +44,7 @@ const productSchema = new mongoose.Schema(
         star: Number,
         comment: String,
         postedby: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        dateCreated: { type: Date, default: Date.now },
       },
     ],
     totalrating: {

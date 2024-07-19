@@ -8,7 +8,6 @@ import {toast} from 'react-toastify';
 
 const PrivateRoute = () => {
   const { userInfo } = useSelector((state) => state.auth );
-  console.log("There is user info in private route", userInfo)
   if(userInfo) {
     return  <Outlet />
   }else{

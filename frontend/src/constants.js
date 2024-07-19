@@ -12,3 +12,4 @@ export const ADDRESSES_URL = '/api/addresses';
 export const COUPON_URL = '/api/coupons';
 export const PAYPAL_URL = '/api/config/paypal';
 export const ENQUIRY_URL = '/api/enquiries';
+export const IMAGE_URL = '/api/images';

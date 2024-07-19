@@ -10,6 +10,7 @@ export const shippingSlice = apiSlice.injectEndpoints({
                     method: 'POST',
                     body: data,
                 }
+               
             }
         }),
         getShipping: builder.query({
@@ -17,7 +18,6 @@ export const shippingSlice = apiSlice.injectEndpoints({
                 return {
                     url: `${ADDRESSES_URL}/`,
                     method: 'GET',
-                
                 }
             }
         }),

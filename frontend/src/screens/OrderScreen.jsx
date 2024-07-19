@@ -151,18 +151,20 @@ const OrderScreen = () => {
                 <>
                   {userInfo.user.local.firstname} {userInfo.user.local.lastname}<br />
                   <strong>Phone No: </strong> {userInfo.user.local.mobile}<br />
-                  <strong>Address: </strong> {userInfo.user.local.address}<br />
+                  <strong>Address: </strong> {userInfo.user.address}<br />
                   <strong>Email: </strong> {userInfo.user.local.email}
                 </>
               ) : userInfo.user.facebook ? (
                 <>
                   {userInfo.user.facebook.firstname} {userInfo.user.facebook.lastname}<br />
                   <strong>Email: </strong> {userInfo.user.local.email}
+                  <strong>Address: </strong> {userInfo?.user?.address}<br />
                 </>
               ) : (
                 <>
                   {userInfo.user.google.firstname} {userInfo.user.google.lastname}<br />
                   <strong>Email: </strong> {userInfo.user.google.email}
+                  <strong>Address: </strong> {userInfo?.user?.address}<br />
                 </>
               )}
               <br />

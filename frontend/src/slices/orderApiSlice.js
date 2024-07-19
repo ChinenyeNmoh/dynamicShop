@@ -10,16 +10,21 @@ export const orderSlice = apiSlice.injectEndpoints({
 
         
         getallOrders: builder.query({
-            query: ({orderStatus, paymentStatus}) => {
-                let url = `${ORDERS_URL}/allorders`;
+            query: ({orderStatus, paymentStatus, page=1, keyword=''}) => {
+                let url ;
+                let params = new URLSearchParams();
                 
-                if (orderStatus && paymentStatus) {
-                    url = `${ORDERS_URL}/allorders?orderStatus=${orderStatus}&paymentStatus=${paymentStatus}`;
-                } else if (orderStatus) {
-                    url = `${ORDERS_URL}/allorders?orderStatus=${orderStatus}`;
-                } else if (paymentStatus) {
-                    url = `${ORDERS_URL}/allorders?paymentStatus=${paymentStatus}`;
+                if (paymentStatus) {
+                    params.append('paymentStatus', paymentStatus);
+                } 
+                if (orderStatus) {
+                    params.append('orderStatus', orderStatus);
+                } 
+                if (page) {
+                    params.append('page', page);
                 }
+                params.append('keyword', keyword);
+                url = `${ORDERS_URL}/allorders/?${params.toString()}`;
                 return { url };
             }
                 

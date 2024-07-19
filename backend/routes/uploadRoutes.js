@@ -8,7 +8,7 @@ router.post(
   "/",
   protect,
   ensureAdmin,
-  uploadPhoto.array("images", 10), // means i want to upload 10 photos at once
+  uploadPhoto.array("images", 1), // means i want to upload 10 photos at once
   productImgResize,
   uploadImages
 );

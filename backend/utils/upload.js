@@ -19,6 +19,9 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, "../public/images/products"));
   },
   // specify file name
+  //here we are saying we want it to be in the format of fieldname-currentdate.jpeg
+  //if you dont want it to be jpegand you want it to retain the original file extension
+  //then do cb(null, file.fieldname + "-" +uniquesuffix + path.extname(file.originalname));
   filename: function (req, file, cb) {
     const uniquesuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, file.fieldname + "-" + uniquesuffix + ".jpeg");
@@ -36,12 +39,16 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
+
+//actual upload
 const uploadPhoto = multer({
     storage: storage,
     fileFilter: multerFilter,
     limits: { fileSize: 1000000 },
   });
 
+
+//resize the image with sharp and specify the width and height
 async function resizeFile(path) {
   let buffer = await sharp(path)
     .resize(800, 800)

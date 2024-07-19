@@ -3,17 +3,17 @@ import { FaTimes } from 'react-icons/fa';
 import Message from '../../components/Message';
 import Loader from '../../components/Loader';
 import { useGetallOrdersQuery } from '../../slices/orderApiSlice';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import Paginate from '../../components/Paginate';
 
 const AllOrderScreen = () => {
+  const { page=1, keyword="" } = useParams();
   const [orderStatus, setOrderStatus] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
-  const { data, isLoading, error, refetch } = useGetallOrdersQuery({ orderStatus, paymentStatus });
-  console.log(orderStatus, paymentStatus)
+  const { data, isLoading, error, refetch } = useGetallOrdersQuery({ orderStatus, paymentStatus, keyword, page });
   const orders = data?.orders;
-  console.log(orders)
   
 
   useEffect(() => {
@@ -30,8 +30,8 @@ const AllOrderScreen = () => {
   return (
     <>
       <h1 className='text-center text-success'>Orders</h1>
-      <Row>
-        <Col md={2}>
+      <Row >
+        <Col md={2} className='mb-3'>
           <Form.Group controlId="orderStatus">
             <Form.Label  className="me-2 fw-bold">Order Status</Form.Label>
             <Form.Control
@@ -61,7 +61,7 @@ const AllOrderScreen = () => {
               }}
             >
               <option value="">Filter order</option>
-              <option value="pending" className={paymentStatus === 'pending' ? 'bg-primary' : ''}>Unpaid</option>
+              <option value="pending" className={paymentStatus === 'pending' ? 'bg-primary' : ''}>Pending</option>
               <option value="paid" className={paymentStatus === 'paid' ? 'bg-primary' : ''}>Paid</option>
             </Form.Control>
           </Form.Group>
@@ -72,7 +72,7 @@ const AllOrderScreen = () => {
         <Loader />
       ) : error ? (
         <Message variant='danger'>
-          {error?.data?.message || error.error}
+          {error?.data?.message || error.error || error?.data?.error}
         </Message>
       ) : (
         <Table striped bordered hover responsive className='table-sm mt-5'>
@@ -138,6 +138,12 @@ const AllOrderScreen = () => {
           </tbody>
         </Table>
       )}
+      <Paginate
+        page={data?.page}
+        totalPages={data?.totalPages}
+       allOrders={true}
+       keyword={keyword}
+      />
     </>
   );
 };

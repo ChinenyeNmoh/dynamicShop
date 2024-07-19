@@ -6,10 +6,12 @@ import Loader from '../../components/Loader';
 import { useGetUsersQuery,
      useDeleteUserMutation } from '../../slices/userApiSlice';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import Paginate from '../../components/Paginate';
 
 const AllUsersScreen = () => {
-  const { data, refetch, isLoading, error } = useGetUsersQuery();
+  const {page=1, keyword=''} = useParams();
+  const { data, refetch, isLoading, error } = useGetUsersQuery({ keyword, page });
   const users = data?.users
   
  
@@ -34,7 +36,7 @@ const AllUsersScreen = () => {
         <Loader />
       ) : error ? (
         <Message variant='danger'>
-          {error?.data?.message || error.error}
+          {error?.data?.message || error.error || error?.data?.error}
         </Message>
       ) : (
         <Table striped bordered hover responsive className='table-sm'>
@@ -116,7 +118,9 @@ const AllUsersScreen = () => {
           </tbody>
         </Table>
       )}
+      <Paginate page={data?.page} totalPages={data?.totalPages} allUsers={true} keyword={keyword} />
     </>
+    
   );
 };
 

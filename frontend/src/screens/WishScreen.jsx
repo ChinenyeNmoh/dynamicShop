@@ -3,48 +3,51 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Row, Col, Card, Button } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { addToCart } from '../slices/cartSlice';
-import { removeFromWish } from '../slices/wishListSlice';
 import { toast } from 'react-toastify';
 import { useCreateCartMutation } from '../slices/cartApiSlice';
 import { useEffect } from 'react';
 import Loader from '../components/Loader';
 import { useGetProductsQuery } from '../slices/productSlice';
+import { useRemoveWishMutation } from '../slices/userApiSlice';
+import { setCredentials } from '../slices/authSlice';
 
 const WishScreen = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const wish = useSelector((state) => state.wish);
-  const { wishItems } = wish;
-  console.log("wishitems",wishItems);
-  const [ cartData, {isLoading: cartLoading, error: cartError} ] = useCreateCartMutation();
+  
+
+  const [cartData, { isLoading: cartLoading, error: cartError }] = useCreateCartMutation();
+  const [delWish, { error: wishError }] = useRemoveWishMutation();
   const { data, isLoading, error } = useGetProductsQuery({});
   const products = data?.products || [];
-  console.log("products",products);
-  console.log("Error",error);
+  const wishItems  = useSelector((state) => state.auth.userInfo?.user.wishlist);
 
   useEffect(() => {
-    if(cartError) {
-      toast.error(cartError?.data?.message)
+    if (cartError || wishError) {
+      toast.error(cartError?.data?.message || cartError?.error || wishError?.data?.message || wishError?.error);
     }
-  }, [cartError])
+  }, [cartError, wishError]);
 
   const addToCartHandler = async (item) => {
-    try{
+    try {
       const id = item._id;
-      const res = await cartData({id, qty:1}).unwrap();
-      console.log(res)
-      toast.success(res.message)
+      const res = await cartData({ id, qty: 1 }).unwrap();
+      toast.success(res.message);
       dispatch(addToCart({ ...res, qty: 1 }));
-
-    }catch(err){
-      toast.error(err?.message || err.error);
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
   };
 
-  const removeFromWishHandler = (id) => {
-    dispatch(removeFromWish(id));
-    toast.info('Item removed from wishlist');
+  const removeFromWishHandler = async (id) => {
+    try {
+      const res = await delWish({ productId: id }).unwrap();
+      console.log(res);
+      dispatch(setCredentials({ ...res }));
+      toast.success(res.message);
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+    }
   };
 
   return (
@@ -57,8 +60,8 @@ const WishScreen = () => {
         </h5>
       ) : (
         <Row>
-          {wishItems?.map((item) => (
-            <Col key={item._id} md={4} className="my-3">
+          {wishItems.map((item) => (
+            <Col key={item._id} md={3} className="my-3">
               <Card className="p-3 rounded">
                 <Link to={`/products/${item._id}`}>
                   <Card.Img src={item.images[0].url} variant='top' />
@@ -70,48 +73,48 @@ const WishScreen = () => {
                     <strong className='text-center mb-0'>{item.name}</strong>
                   </Card.Title>
                   {products.some((product) => product._id === item._id && product.quantity === 0) ? (
-  <div>
-    {products.some((product) => product._id === item._id && product.discountedPrice > 0 )? (
-      <Card.Text as='h5' className='text-decoration-line-through'>
-        ${products.find((product) => product._id === item._id).discountedPrice} <span className='text-danger'>sold</span>
-      </Card.Text>
-    ) : (
-      <Card.Text as='h5' className='text-decoration-line-through'>
-        ${products.find((product) => product._id === item._id).price} <span className='text-danger'>sold</span>
-      </Card.Text>
-    )}
-  </div>
-) : (
-  <>
-    {products.some((product) => product._id === item._id && product.discountedPrice > 0) ? (
-      <Card.Text as='p'>
-        <span className='text-muted text-decoration-line-through'>Original Price: ${products.find((product) => product._id === item._id).price}</span><br />
-        <span className='fw-bold'>Discounted Price: ${products.find((product) => product._id === item._id).discountedPrice}</span>
-      </Card.Text>
-    ) : (
-      <Card.Text as='h5'>
-        ${products.find((product) => product._id === item._id)?.price}
-      </Card.Text>
-    )}
-  </>
-)}
+                    <div>
+                      {products.some((product) => product._id === item._id && product.discountedPrice > 0) ? (
+                        <Card.Text as='h5' className='text-decoration-line-through'>
+                          ${products.find((product) => product._id === item._id).discountedPrice} <span className='text-danger'>sold</span>
+                        </Card.Text>
+                      ) : (
+                        <Card.Text as='h5' className='text-decoration-line-through'>
+                          ${products.find((product) => product._id === item._id).price} <span className='text-danger'>sold</span>
+                        </Card.Text>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {products.some((product) => product._id === item._id && product.discountedPrice > 0) ? (
+                        <Card.Text as='p'>
+                          <span className='text-muted text-decoration-line-through'>Price: ${products.find((product) => product._id === item._id).price}</span><br />
+                          <span className='fw-bold'>Sales Price: ${products.find((product) => product._id === item._id).discountedPrice}</span>
+                        </Card.Text>
+                      ) : (
+                        <Card.Text as='h5'>
+                          ${products.find((product) => product._id === item._id)?.price}
+                        </Card.Text>
+                      )}
+                    </>
+                  )}
                   <div className='d-flex justify-content-between '>
                     <Button
-                      className=" text-danger btn btn-link text-decoration-none"
+                      className="text-danger btn btn-link text-decoration-none outline-light"
                       onClick={() => removeFromWishHandler(item._id)}
                     >
                       <FaHeart className='text-danger me-1' />
                       Remove
                     </Button>
                     <Button
-                    variant='light'
-                      className="btn btn-link text-decoration-none"
+                      variant='light'
+                      className="btn btn-link text-decoration-none outline-light"
                       type="button"
                       disabled={products.some((product) => product._id === item._id && product.quantity === 0)}
                       onClick={() => addToCartHandler(item)}
                     >
                       <FaShoppingCart className='text-success me-1' />
-                      Add To Cart
+                      Cart
                     </Button>
                   </div>
                 </Card.Body>

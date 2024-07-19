@@ -22,6 +22,7 @@ export const couponSlice = apiSlice.injectEndpoints({
                 method: 'PUT',
                 body: data,
             }),
+            invalidatesTags: ['COUPON'],
         }),
         deleteCoupon: builder.mutation({
             query: (id) => ({

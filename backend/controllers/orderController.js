@@ -235,30 +235,63 @@ const userOrders = asyncHandler(async (req, res) => {
   }
 });
 
-// Get all orders (Admin route)
+//admin route
 const allOrders = asyncHandler(async (req, res) => {
-  // Extract query parameters from the request
-  const { paymentStatus, orderStatus } = req.query;
+  const { paymentStatus, orderStatus, keyword } = req.query;
+  console.log(keyword);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 8;
 
   try {
     // Build the query object based on the provided parameters
     let query = {};
+    let count;
     if (paymentStatus) query.paymentStatus = paymentStatus;
     if (orderStatus) query.orderStatus = orderStatus;
 
     // Fetch orders based on the query
-    const orders = await Order.find(query).populate([
-      { path: 'products.productId' },
-      { path: 'shippingAddress' },
-      { path: 'user', select: '-password -updatedAt -__v' },
-    ]);
+    let orders = await Order.find(query)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .populate([
+        { path: 'products.productId' },
+        { path: 'shippingAddress' },
+        { path: 'user', select: '-password -updatedAt -__v' }
+      ])
+      .sort({ createdAt: -1 });
 
-    if (!orders.length) {
+    // If a keyword is provided, filter the populated orders
+    if (keyword) {
+      const lowerKeyword = keyword.toLowerCase();
+      orders = orders.filter(order =>
+        order.user?.local?.firstname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.local?.lastname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.local?.email?.toLowerCase().includes(lowerKeyword)
+        || order.user?.google?.firstname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.google?.lastname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.google?.email?.toLowerCase().includes(lowerKeyword)
+        || order.user?.facebook?.firstname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.facebook?.lastname?.toLowerCase().includes(lowerKeyword)
+        || order.user?.facebook?.email?.toLowerCase().includes(lowerKeyword)
+      );
+      count = orders.length;
+      
+
+    }else{
+       // Count the total number of documents matching the query
+    count = await Order.countDocuments(query);
+    }
+    console.log(count);
+
+    if (count === 0) {
       return res.status(404).json({ error: "No orders found" });
     }
 
     res.status(200).json({
       message: 'Orders fetched successfully',
+      totalPages: Math.ceil(count / limit),
+      page,
+      totalCount: count,
       orders,
     });
   } catch (err) {
@@ -266,6 +299,7 @@ const allOrders = asyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 // Get order by id
 const getOrderById = asyncHandler(async (req, res) => {

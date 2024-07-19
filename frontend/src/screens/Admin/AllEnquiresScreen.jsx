@@ -6,12 +6,15 @@ import Loader from '../../components/Loader';
 import { useGetEnquiriesQuery, useDeleteEnquiryMutation, useUpdateEnquiryMutation } from '../../slices/enquiryApiSlice';
 import { toast } from 'react-toastify';
 import { useState, useEffect } from 'react';
+import Paginate from '../../components/Paginate';
+import { useParams } from 'react-router-dom';
 
 const AllEnquiriesScreen = () => {
+  const {page=1, keyword=''} = useParams();
     const [show, setShow] = useState(false);
     const [status, setStatus] = useState('');
     const [selectedEnquiry, setSelectedEnquiry] = useState(null);
-  const { data, isLoading, error, refetch } = useGetEnquiriesQuery(status);
+  const { data, isLoading, error, refetch } = useGetEnquiriesQuery({status, keyword, page});
   const enquiries = data?.enquiries || [];
   const [deleteEnquiry, { isLoading: loadingDelete }] = useDeleteEnquiryMutation();
   const [updateEnquiry, { isLoading: loadingUpdate }] = useUpdateEnquiryMutation();
@@ -161,6 +164,7 @@ const AllEnquiriesScreen = () => {
           )}
         </Modal.Body>
       </Modal>
+      <Paginate totalPages={data?.totalPages} page={data?.page} allEnquires={true} keyword={keyword}/>
     </>
   );
 };

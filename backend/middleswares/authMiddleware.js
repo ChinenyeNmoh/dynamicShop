@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 
 const protect = asyncHandler(async (req, res, next) => {
   let token = req.cookies.jwtToken;
-  console.log('Token:', token);
   if(!token && !req.user){
     
     return res.status(400).json({
@@ -19,7 +18,6 @@ const protect = asyncHandler(async (req, res, next) => {
     if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('Decoded token:', decoded);
       req.user = await User.findById(decoded.userId).select('-password');
       console.log('User is authenticated with JWT');
       return next();
@@ -52,6 +50,8 @@ const ensureGuest = (req, res, next) => {
 
 
 const ensureAdmin = asyncHandler(async (req, res, next) => {
+
+
   // Check if the user is authenticated via Passport.js
   if (req.isAuthenticated() && req.user.role === "admin") {
     console.log('User is an admin via Passport.js');
@@ -70,7 +70,7 @@ const ensureAdmin = asyncHandler(async (req, res, next) => {
     req.user = await User.findById(decoded.userId).select('-password');
 
     if (req.user && req.user.role === "admin") {
-      console.log('User is an admin via JWT');
+      console.log('User is an admin via JWT', req.user.role, req.user.email);
       return next();
     } else {
       return res.status(403).json({ message: 'You are not an admin' });

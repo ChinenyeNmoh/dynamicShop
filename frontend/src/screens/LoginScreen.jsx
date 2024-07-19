@@ -29,7 +29,6 @@ const LoginScreen = () => {
   const message = searchParams.get('message');
 
   const { userInfo } = useSelector((state) => state.auth);
-  const cart = useSelector((state) => state.cart);
 
 
   useEffect(() => {
