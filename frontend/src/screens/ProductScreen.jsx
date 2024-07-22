@@ -5,7 +5,7 @@ import { Form, Row, Col, Image, ListGroup, Card, Button } from 'react-bootstrap'
 import Rating from '../components/Rating';
 import { useGetProductDetailsQuery, useProductRatingMutation } from '../slices/productSlice';
 import Loader from '../components/Loader';
-import Flash from '../components/Flash';
+import Message from '../components/Message';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +13,7 @@ import { addToCart } from '../slices/cartSlice';
 import { setCredentials } from '../slices/authSlice';
 import { useCreateCartMutation } from '../slices/cartApiSlice';
 import { useAddWishMutation } from '../slices/userApiSlice';
-import Message from '../components/Message';
+import Meta from '../components/Meta';
 
 const ProductScreen = () => {
   const { id } = useParams();
@@ -110,6 +110,7 @@ const ProductScreen = () => {
 
   return (
     <>
+    <Meta title={product.name} description={product.description} />
     {cartLoading && <Loader />}
       <Link to="/" className="btn btn-light my-3">
         Go Back
@@ -118,7 +119,7 @@ const ProductScreen = () => {
       {isLoading ? (
         <Loader />
       ) : error ? (
-        <Flash error={error} data={data} />
+        <Message variant='danger'>{error?.data?.message || error?.data?.error}</Message>
         
       ) : (
         <>

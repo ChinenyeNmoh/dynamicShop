@@ -45,7 +45,7 @@ const createCart = asyncHandler(async (req, res) => {
     // If no cart exists, create a new one
     const productTotalPrice = productPrice * qty;
     const taxFee = Number(0.15 * productTotalPrice);
-    const shippingFee = productTotalPrice > 50000 ? 0 : 10;
+    const shippingFee = productTotalPrice > 50000 ? 0 : 3000;
 
     cart = new Cart({
       products: [{

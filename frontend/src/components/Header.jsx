@@ -72,13 +72,13 @@ const Header = () => {
                 menuVariant="dark"
                 className="me-3"
               >
-                <LinkContainer to="/">
+                <LinkContainer to="/allproducts">
                   <NavDropdown.Item>All Products</NavDropdown.Item>
                 </LinkContainer>
                 {types.map((type) => (
                   <LinkContainer
                     key={type._id}
-                    to={{ pathname: '/', search: `productType=${type._id}` }}
+                    to={{ pathname: '/allproducts', search: `productType=${type._id}` }}
                   >
                     <NavDropdown.Item>
                       All {type.title.charAt(0).toUpperCase() + type.title.slice(1)}
@@ -98,13 +98,13 @@ const Header = () => {
                   .filter((cat) => cat.title === 'boys')
                   .map((cat) => (
                     <div key={cat._id}>
-                      <LinkContainer to={{ pathname: '/', search: `category=${cat._id}` }}>
+                      <LinkContainer to={{ pathname: '/allproducts', search: `category=${cat._id}` }}>
                         <NavDropdown.Item>All Boys</NavDropdown.Item>
                       </LinkContainer>
                       {types.map((type) => (
                         <LinkContainer
                           key={type._id}
-                          to={{ pathname: '/', search: `category=${cat._id}&productType=${type._id}` }}
+                          to={{ pathname: '/allproducts', search: `category=${cat._id}&productType=${type._id}` }}
                         >
                           <NavDropdown.Item>
                             {type.title.charAt(0).toUpperCase() + type.title.slice(1)}
@@ -126,13 +126,13 @@ const Header = () => {
                   .filter((cat) => cat.title === 'girls')
                   .map((cat) => (
                     <div key={cat._id}>
-                      <LinkContainer to={{ pathname: '/', search: `category=${cat._id}` }}>
+                      <LinkContainer to={{ pathname: '/allproducts', search: `category=${cat._id}` }}>
                         <NavDropdown.Item>All Girls</NavDropdown.Item>
                       </LinkContainer>
                       {types.map((type) => (
                         <LinkContainer
                           key={type._id}
-                          to={{ pathname: '/', search: `category=${cat._id}&productType=${type._id}` }}
+                          to={{ pathname: '/allproducts', search: `category=${cat._id}&productType=${type._id}` }}
                         >
                           <NavDropdown.Item>
                             {type.title.charAt(0).toUpperCase() + type.title.slice(1)}
@@ -150,7 +150,7 @@ const Header = () => {
                 menuVariant="dark"
                 className="me-3"
               >
-                <LinkContainer to={{ pathname: '/', search: 'sale=true' }}>
+                <LinkContainer to={{ pathname: '/allproducts', search: 'sale=true' }}>
                   <NavDropdown.Item>All</NavDropdown.Item>
                 </LinkContainer>
                 {types.map((type) => (
@@ -158,7 +158,7 @@ const Header = () => {
                     {categories.map((cat) => (
                       <LinkContainer
                         key={cat._id}
-                        to={{ pathname: '/', search: `category=${cat._id}&productType=${type._id}&sale=true` }}
+                        to={{ pathname: '/allproducts', search: `category=${cat._id}&productType=${type._id}&sale=true` }}
                       >
                         <NavDropdown.Item>
                           {`${cat.title.charAt(0).toUpperCase() + cat.title.slice(1)} ${type.title.charAt(0).toUpperCase() + type.title.slice(1)}`}

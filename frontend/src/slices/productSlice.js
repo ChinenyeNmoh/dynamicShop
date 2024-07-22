@@ -5,29 +5,18 @@ import { IMAGE_URL } from '../constants';
 export const productSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query({
-      query: ({ category = '', productType = '', sort = '', sale,  keyword='', page=1}) => {
+      query: ({ category = '', productType = '', sort = '', sale,  keyword='', page=1, wish=false, home=false}) => {
         let url = PRODUCTS_URL;
         const params = new URLSearchParams();
 
-        if (category) {
-          params.append('category', category);
-        }
-
-        if (productType) {
-          params.append('productType', productType);
-        }
-
-        if (sort) {
-          params.append('sort', sort);
-        }
-
-        if (sale) {
-          params.append('sale', sale);
-        }
-        if (keyword) {
-          params.append('keyword', keyword);
-        }
+        if (category) params.append('category', category);
+        if (productType) params.append('productType', productType);
+        if (sort) params.append('sort', sort);
+        if (sale) params.append('sale', sale);
+        if (keyword) params.append('keyword', keyword);
         if(page) params.append('page', page);
+        if(wish) params.append('wish', wish);
+        if(home) params.append('home', home);
 
         url = `${PRODUCTS_URL}?${params.toString()}`;
 

@@ -1,84 +1,107 @@
-import { Row, Col, Form, Button} from 'react-bootstrap';
-import Product from '../components/Products';
+import { Link } from 'react-router-dom';
 import { useGetProductsQuery } from '../slices/productSlice';
+import { useGetCouponsQuery } from '../slices/couponApiSlices';
 import Loader from '../components/Loader';
-import Flash from '../components/Flash';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { useState } from 'react';
-import Paginate from '../components/Paginate';
+import { Carousel, Image, Row, Col, Form } from 'react-bootstrap';
+import Message from '../components/Message';
+import Product from '../components/Products';
+import Meta from '../components/Meta';
 
 
 
 const HomeScreen = () => {
-  const { page = 1, keyword = "" } = useParams();
-  console.log(`page = ${page} keyword = ${keyword}`);
-  const location = useLocation();
-  const [sort, setSort] = useState('');
-  
-  const queryParams = new URLSearchParams(location.search);
-  const category = queryParams.get('category') || '';
-  const productType = queryParams.get('productType') || '';
-  const sale = queryParams.get('sale') || '';
-
-  const { data, isLoading, error } = useGetProductsQuery({ category, productType, sort, sale, keyword, page });
+  const home = true;
+  const { data, isLoading, error } = useGetProductsQuery({home});
   const products = data?.products || [];
+  console.log(products);
+  const { data: couponData } = useGetCouponsQuery();
+  const coupons = couponData?.coupons || [];
+
+ 
  
   return (
     <>
-      {keyword && <Link to='/' className='btn btn-light mb-4'>Go Back</Link>}
-      {isLoading ? (
-        <Loader />
-      ) : error ? (
-        <Flash error={error?.data?.message} data={data} />
-      ) : (
-        <>
-          <Row className='d-flex align-items-center'>
-            <Col sm={12} md={6} lg={4} xl={3}>
-              <Form>
-                <Form.Group className='mb-3' controlId='sort'>
-                  <Row>
-                    <Col md={2}>
-                      <Form.Label className='mt-2 fw-bold'>Sort</Form.Label>
-                    </Col>
-                    <Col>
-                      <Form.Select
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                      >
-                        <option value=''>Default</option>
-                        <option value='low'>Lowest Price</option>
-                        <option value='high'>Highest Price</option>
-                        <option value='old'>Oldest</option>
-                        <option value='alphabetical'>Alphabetical</option>
-                        <option value='rating'>Rating</option>
-                      </Form.Select>
-                    </Col>
-                    <Col md={3}>
-                      <Button
-                        type='button'
-                        className='btn btn-secondary mb-3'
-                        onClick={() => setSort('')}
-                      >
-                        Reset
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form.Group>
-              </Form>
-            </Col>
-          </Row>
+    <Meta title='Home Page' />
+    {isLoading && <Loader />}
+    {error && <Message variant="danger">{error?.data?.message}</Message>}
+    <Row>
+    <Carousel pause='hover' className='carousel bg-light'>
+        <Carousel.Item >
+          <Link to={'/allproducts'}>
+            <Image src="/images/banner.jpg" alt='first image'  fluid />
+          </Link>
+        </Carousel.Item>
+        <Carousel.Item >
+          <Link to={'/allproducts'}>
+            <Image src="/images/banner2.png" alt='first image' fluid />
+            
+          </Link>
+        </Carousel.Item>
+        <Carousel.Item >
+          <Link to={'/allproducts'}>
+            <Image src="/images/banner1.jpg" alt='first image' fluid />
+            
+          </Link>
+        </Carousel.Item>
+        <Carousel.Item >
+          <Link to={'/allproducts'}>
+            <Image src="/images/banner4.jpeg" alt='first image'  fluid />
+            
+          </Link>
+        </Carousel.Item>
+    </Carousel>
+    </Row>
+    <Row className='coupclass'>
+    <Col md={12}>
+      <div className='coupon mb-5'>
+        <Form className='couponform'>
+          <Form.Group className='mb-3 w-50 fw-bold text-success' controlId='code'>
+            <Form.Control 
+            type='text' 
+            value={coupons[0]?.title}
+            className=' fw-bold text-success' 
+            />
+          </Form.Group>
+        </Form>
 
-          <Row>
+      </div>
+      </Col >
+
+      </Row>
+    <Row className='d-flex justify-content-between'>
+    
+      <Col md={5}>
+      <Link to={'/allproducts?category=6664c61184fd65654a3f6f2a'}>
+      <div className='girls mt-5'>
+      </div>
+        </Link>
+      </Col>
+      <Col md={5}>
+      <Link to={'/allproducts?category=6664c5f184fd65654a3f6f26'}>
+      <div className='boys mt-5'>
+      </div>
+      </Link>
+      </Col>
+    </Row>
+
+    <Row>
+      <Col md={12}>
+      <h3 className='text-center text-success mt-5'>New Products</h3>
+      </Col>
+      </Row>
+      <Row>
             {products?.map((product) => (
               product.images[0].url !== 'sample image' && 
-              <Col key={product._id} sm={12} md={4} lg={4} xl={3}>
+              <Col key={product._id} sm={12} md={2} >
                 <Product product={product} />
               </Col>
             ))}
           </Row>
-          <Paginate totalPages={data?.totalPages} page={Number(page)} allProducts={true} keyword={keyword} />
-        </>
-      )}
+          <div className='text-center'>
+            <Link to='/allproducts'>
+              <button className='btn btn-success'>Load More</button>
+            </Link>
+          </div>
     </>
   );
 };

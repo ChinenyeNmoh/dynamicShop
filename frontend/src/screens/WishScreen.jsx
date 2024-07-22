@@ -10,15 +10,14 @@ import Loader from '../components/Loader';
 import { useGetProductsQuery } from '../slices/productSlice';
 import { useRemoveWishMutation } from '../slices/userApiSlice';
 import { setCredentials } from '../slices/authSlice';
+import Meta from '../components/Meta';
 
 const WishScreen = () => {
   const dispatch = useDispatch();
-
-  
-
+  let wish = true;
   const [cartData, { isLoading: cartLoading, error: cartError }] = useCreateCartMutation();
   const [delWish, { error: wishError }] = useRemoveWishMutation();
-  const { data, isLoading, error } = useGetProductsQuery({});
+  const { data, isLoading } = useGetProductsQuery({wish});
   const products = data?.products || [];
   const wishItems  = useSelector((state) => state.auth.userInfo?.user.wishlist);
 
@@ -52,7 +51,9 @@ const WishScreen = () => {
 
   return (
     <div>
+      <Meta title='Wishlist' />
       {cartLoading && <Loader />}
+      {isLoading && <Loader />}
       <h1 style={{ marginBottom: '20px' }}>WishList</h1>
       {wishItems?.length === 0 ? (
         <h5>

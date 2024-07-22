@@ -63,6 +63,9 @@ const checkOut = asyncHandler(async (req, res) => {
       const htmlContent = processOrderEmailTemplate(myOrder, firstname, lastname, email, phoneNo);
       await sendEmail(email, 'Order confirmation', htmlContent);
     } else if (userCart.paymentMethod === 'flutterwave') {
+      if(!req.body.cardNumber || !req.body.cvv || !req.body.expiryDate || !req.body.cardName){
+        return res.status(400).json({ error: 'All fields are required for payment' });
+      }
       const [month, year] = req.body.expiryDate.split('/');
       payload = {
         card_number: req.body.cardNumber,
@@ -199,7 +202,7 @@ const myOrders = asyncHandler(async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
     if (!orders.length) {
-      return res.status(404).json({ error: "Orders not found" });
+      return res.status(404).json({ error: "No Order found" });
     }
     await Order.populate(orders, [
       { path: 'products.productId' },
@@ -343,7 +346,11 @@ const deleteOrder = asyncHandler(async (req, res) => {
 const confirmDelivery = asyncHandler(async (req, res) => {
   const id = req.params.id;
   try {
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).populate([
+      {path: 'products.productId'},
+      {path:'shippingAddress'},
+      {path: 'user', select: '-password -updatedAt -__v'}
+    ]);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -354,6 +361,15 @@ const confirmDelivery = asyncHandler(async (req, res) => {
     }
     order.deliveredAt = new Date();
     await order.save();
+    const billingOwner = await User.findById(order.user);
+    const firstname = billingOwner?.local.firstname || billingOwner.google.firstname || billingOwner.facebook.firstname;
+    const lastname = billingOwner?.local.lastname || billingOwner.google.lastname || billingOwner.facebook.lastname;
+    const email = billingOwner?.local.email || billingOwner.google.email || billingOwner.facebook.email;
+    const phoneNo = billingOwner?.local.mobile || "";
+    const htmlContent = deliveredOrderEmailTemplate(order, firstname, lastname, email, phoneNo);
+    await sendEmail(email, 'Order delivery confirmation', htmlContent);
+
+
     res.status(200).json({ 
       message: 'Order status updated to delivered',
       order: order

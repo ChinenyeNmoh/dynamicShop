@@ -7,6 +7,7 @@ import CheckoutSteps from '../components/CheckoutSteps';
 import { savePaymentMethod } from '../slices/cartSlice';
 import { useUpdateCartMutation } from '../slices/cartApiSlice';
 import { toast } from 'react-toastify';
+import Meta from '../components/Meta';
 
 
 const PaymentScreen = () => {
@@ -37,6 +38,7 @@ const PaymentScreen = () => {
 
   return (
     <FormContainer>
+      <Meta title="Payment" />
       <CheckoutSteps step1 step2 step3 />
       <hr />
       <h2 className="text-center mt-3">Payment Method</h2>

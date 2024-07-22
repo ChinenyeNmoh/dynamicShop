@@ -33,7 +33,7 @@ const Logo = () => {
       }else if (currentPath.startsWith('/admin/enquires')) {
         navigate(`/admin/enquires/${trimmedKeyword}/${page}`);
       }else {
-        navigate(`/${trimmedKeyword}/${page}`);
+        navigate(`/allproducts/${trimmedKeyword}/${page}`);
       }
       setKeyword('');
     } else {
@@ -46,7 +46,7 @@ const Logo = () => {
     }else if (currentPath.startsWith('/admin/enquires')) {
       navigate(`/admin/enquires`); 
   }else{
-      navigate(`/`); // You can navigate to the homepage or a default search page
+      navigate(`/allproducts`); // You can navigate to the homepage or a default search page
     } 
     }
   };

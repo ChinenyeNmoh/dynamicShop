@@ -75,7 +75,7 @@ const OrderScreen = () => {
       navigate(`/order/${res.order._id}`);
     } catch (err) {
       console.log('Error:', err);
-      toast.error(err.data?.message || err.message);
+      toast.error(err.data?.message || err.data?.error || err.error);
     }
   };
 
@@ -107,7 +107,6 @@ const OrderScreen = () => {
   const paypalOrder = async (data, actions) => {
     try {
       const response = await getCart().unwrap();
-      console.log(response?.cart._id);
       const getCartID = await actions.order.create({
         purchase_units: [
           {
@@ -115,7 +114,6 @@ const OrderScreen = () => {
           },
         ],
       });
-      console.log('id', getCartID)
       return getCartID;
     } catch (err) {
       console.log('Error:', err);

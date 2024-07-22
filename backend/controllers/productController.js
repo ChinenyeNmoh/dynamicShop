@@ -52,9 +52,11 @@ const getProduct = asyncHandler(async (req, res) => {
 
 // get all products
 const getAllProduct = asyncHandler(async (req, res) => {
-  const { productType, category, sort,  sale, keyword } = req.query;
+  const { productType, category, sort,  sale, keyword, wish, home } = req.query;
   let query = {};
   let sortBy = {};
+  let products;
+  let count;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 8;
 
@@ -93,23 +95,33 @@ const getAllProduct = asyncHandler(async (req, res) => {
       sortBy.createdAt = -1; // Default sorting by newest
   }
 
-  if(keyword){
-    query = Product.find({
-      $or: [
-        {name: { $regex: keyword, $options: 'i' }},
-        { description: { $regex: keyword, $options: 'i' } },
-      ],
-    });
-  }
-
-
   try {
-    const count = await Product.countDocuments(query);
-    const products = await Product.find(query)
+    if(keyword){
+      query = Product.find({
+        $or: [
+          {name: { $regex: keyword, $options: 'i' }},
+          { description: { $regex: keyword, $options: 'i' } },
+        ],
+      });
+    }
+    if (wish){
+      console.log('All products will be returned without pagination')
+      products = await Product.find({})
     .sort(sortBy)
-    .limit(limit)
-    .skip(limit * (page - 1))
     .populate('category productType');
+    count = products.length;
+    }else if(home) {
+      products = await Product.find({}).sort({createdAt: -1}).limit(12).populate('category productType');
+      count = products.length;
+    }else{
+      count = await Product.countDocuments(query);
+      products = await Product.find(query)
+      .sort(sortBy)
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .populate('category productType');
+    }
+   
     if (products && count > 0) {
       return res.status(200).json({
         message: 'Products retrieved',

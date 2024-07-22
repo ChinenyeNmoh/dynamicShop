@@ -76,7 +76,7 @@ const processOrderEmailTemplate = (myOrder, firstname, lastname, email, phoneNo)
 	Hi ${firstname}  ${lastname},</p>
 	<p>We have received  your order and its being processed .</p>
 	<h4><strong>Order Id: </strong>${myOrder._id}</h4>
-    <p><strong>Delivered At: </strong>${myOrder.createdAt.toString().substring(0, 10)}</p>
+    <p><strong>Ordered At: </strong>${myOrder.createdAt.toString().substring(0, 10)}</p>
     <table>
         <thead>
         <tr>
@@ -201,11 +201,11 @@ const deliveredOrderEmailTemplate = (myOrder, firstname, lastname, email, phoneN
 		<br/>
             <tr>
                 <td colspan="2"><strong> SubTotal:</strong></td>
-                <td align="right">N${myOrder.subTotal}</td>
+                <td align="right">N${myOrder.cartTotal}</td>
             </tr>
             <tr>
                 <td colspan="2"><strong>SubTotalAfterCoupon:</strong></td>
-                <td align="right">N${myOrder.subTotalAfterCoupon}</td>
+                <td align="right">N${myOrder.totalAfterCoupon}</td>
             </tr>
             <tr>
                 <td colspan="2"><strong>Shipping Price:</strong></td>
@@ -240,18 +240,19 @@ const deliveredOrderEmailTemplate = (myOrder, firstname, lastname, email, phoneN
         </tfoot>
     </table>
 
-    <h2>Shipping address</h2>
+    <h3>Shipping address</h3>
     <p>
-        <strong>Full Name: </strong>${myOrder.address.firstname} ${myOrder.address.lastname},<br/>
-        <strong>Street: </strong>${myOrder.address.street},<br/>
-        <strong>City: </strong>${myOrder.address.city},<br/>
-        <strong>State: </strong>${myOrder.address.state},<br/>
-        <strong>Landmark: </strong>${myOrder.address.landmark},<br/>
-        <strong>Recipient Phone No: </strong>${myOrder.address.recipientPhoneNo}<br/>
+        <strong>Full Name: </strong>${myOrder.shippingAddress?.recipientName} <br/>
+        <strong>Street: </strong>${myOrder.shippingAddress.street},<br/>
+        <strong>City: </strong>${myOrder.shippingAddress.city},<br/>
+        <strong>State: </strong>${myOrder.shippingAddress.state},<br/>
+        <strong>Landmark: </strong>${myOrder.shippingAddress.landmark},<br/>
+        <strong>Country: </strong>${myOrder.shippingAddress.country},<br/>
+        <strong>Recipient Phone No: </strong>${myOrder.shippingAddress.recipientMobile}<br/>
     </p>
 
-    <h2>Billing address</h2>
-    <p>
+    <h3>Billing address</h3>
+      <p>
         <strong>Full Name: </strong>${firstname} ${lastname},<br/>
         <strong>Phone Number: </strong>${phoneNo},<br/>
         <strong>Email: </strong>${email},<br/>

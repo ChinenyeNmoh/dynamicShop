@@ -147,7 +147,7 @@ const ProfileScreen = () => {
           <Loader />
         ) : error ? (
           <Message variant='danger'>
-            {error?.data?.message || error.error}
+            {error?.data?.message || error?.data?.error || error.error}
           </Message>
         ) : (
             <Table striped bordered hover responsive className='table-sm'>

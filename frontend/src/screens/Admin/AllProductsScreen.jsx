@@ -117,7 +117,7 @@ const AllProductsScreen = () => {
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product._id.toString().substring(0, 7)}>
+                <tr key={product._id}>
                   <td>{product._id.toString().substring(0, 7)}</td>
                   <td>{product.name}</td>
                   <td>N{product.price}</td>

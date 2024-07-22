@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import { HelmetProvider } from 'react-helmet-async';
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -11,6 +12,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 //import './styles/bootstrap.custom.css';
 import './styles/index.css';
 import HomeScreen from './screens/HomeScreen';
+import AllHomeProductScreen from './screens/AllHomeProductScreen.jsx';
 import ProductScreen from './screens/ProductScreen';
 import NotFoundScreen from "./screens/NotFoundScreen.jsx"
 import { Provider } from 'react-redux';
@@ -39,13 +41,15 @@ import AllEnquiriesScreen from './screens/Admin/AllEnquiresScreen.jsx';
 import AllProductsScreen from './screens/Admin/AllProductsScreen.jsx';
 import UpdateProductScreen from './screens/Admin/updateProductScreen.jsx';
 
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<App />}>
-      <Route index={true} path='/' element={<HomeScreen />} />
-      <Route path='/:page' element={<HomeScreen />} />
-      <Route path='/:keyword' element={<HomeScreen />} />
-      <Route path='/:keyword/:page' element={<HomeScreen />} />
+      <Route path='/' element={<HomeScreen />} />
+      <Route index={true} path='/allproducts' element={< AllHomeProductScreen  />} />
+      <Route path='/allproducts/:page' element={< AllHomeProductScreen  />} />
+      <Route path='/allproducts/:keyword' element={< AllHomeProductScreen  />} />
+      <Route path='/allproducts/:keyword/:page' element={< AllHomeProductScreen  />} />
       <Route path='/products/:id' element={<ProductScreen />} />
       <Route path='/login' element={<LoginScreen />} />
       <Route path='/register' element={<RegisterScreen />} />
@@ -95,10 +99,13 @@ const router = createBrowserRouter(
 )
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    {/* HelmetProvider is used to manage SEO metadata */}
+    <HelmetProvider>
     <Provider store={store}>
     <PayPalScriptProvider deferLoading={true}>
         <RouterProvider router={router} />
       </PayPalScriptProvider>
     </Provider>
+    </HelmetProvider>
   </React.StrictMode>
 )

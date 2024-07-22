@@ -1,6 +1,5 @@
 import { Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import Rating from './Rating';
 import { FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -11,6 +10,7 @@ import { setCredentials } from '../slices/authSlice';
 import { useEffect } from 'react';
 import Loader from './Loader';
 import { useNavigate } from 'react-router-dom';
+
 
 const Product = ({ product }) => {
   const dispatch = useDispatch();
@@ -38,7 +38,6 @@ const Product = ({ product }) => {
   const addToWishHandler = async (product) => {
     try {
       const res = await addWish({ productId: product._id }).unwrap();
-      // lets update the user credentials to contain the updated wishlist
       dispatch(setCredentials({ ...res }));
       toast.success(res.message);
     } catch (err) {
@@ -47,12 +46,12 @@ const Product = ({ product }) => {
   };
 
   return (
-    <Card className='my-3 p-3 rounded'>
+    <Card className='my-3 px-3 pt-3 rounded fixed-height-card'>
       {(cartLoading || wishLoading) && <Loader />}
       <Link to={`/products/${product._id}`}>
-        <Card.Img src={product.images[0].url} variant='top' />
+        <Card.Img src={product.images[0].url} variant='top' className='card-img-top' />
       </Link>
-      <Card.Body>
+      <Card.Body className='card-body'>
         <Link to={`/products/${product._id}`} className="text-decoration-none">
           <Card.Title as='div' className='product-title'>
             <strong className='text-center mb-0'>{product.name}</strong>
@@ -76,7 +75,7 @@ const Product = ({ product }) => {
             {product.discountedPrice > 0 ? (
               <Card.Text as='p'>
                 <span className='text-muted text-decoration-line-through'>Price: N{product.price}</span><br />
-                <span className='fw-bold'>Sales Price: ${product.discountedPrice}</span>
+                <span className='fw-bold'> ${product.discountedPrice}</span>
               </Card.Text>
             ) : (
               <Card.Text as='h5'>
@@ -90,17 +89,17 @@ const Product = ({ product }) => {
           <Button
             variant='link'
             onClick={() => addToWishHandler(product)}
-            className='text-dark text-decoration-none '
+            className='text-dark text-decoration-none ms-2'
           >
-            <FaHeart /> Wishlist
+            <FaHeart />
           </Button>
           <Button
             variant='link'
             onClick={() => addToCartHandler(product, 1)}
-            className='text-dark text-decoration-none'
+            className='text-dark text-decoration-none ms-1 '
             disabled={product.quantity === 0}
           >
-            <FaShoppingCart /> Cart
+            <FaShoppingCart />
           </Button>
         </Card.Text>
       </Card.Body>
