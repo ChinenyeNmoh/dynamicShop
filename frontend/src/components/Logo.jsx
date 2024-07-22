@@ -5,51 +5,53 @@ import Image from 'react-bootstrap/Image';
 import { FaSearch } from 'react-icons/fa';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import { useNavigate, useParams } from 'react-router-dom'; 
+import { useNavigate, useParams,  useLocation } from 'react-router-dom';
 
 
 const Logo = () => {
   const navigate = useNavigate();
-  //n is the place holder for the first param which is the page number
-  //am only interested in the keyword
-  const { keyword: urlKeyword,} = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const { keyword: urlKeyword } = useParams();
   const page = 1;
 
-  const [keyword, setKeyword] = useState(urlKeyword);
+  const [keyword, setKeyword] = useState(urlKeyword || '');
+
   const submitHandler = (e) => {
     e.preventDefault();
     
     const trimmedKeyword = keyword.trim();
     const currentPath = window.location.pathname;
-    console.log(currentPath);
+    let query = queryParams.toString();
 
     if (trimmedKeyword) {
-       if (currentPath.startsWith('/admin/orders')) {
-        navigate(`/admin/orders/${trimmedKeyword}/${page}`);
+      if (currentPath.startsWith('/admin/orders')) {
+        navigate(`/admin/orders/${trimmedKeyword}/${page}?${query}`);
       } else if (currentPath.startsWith('/admin/products')) {
-        navigate(`/admin/products/${trimmedKeyword}/${page}`);
-      }else if (currentPath.startsWith('/admin/users')) {
-        navigate(`/admin/users/${trimmedKeyword}/${page}`);
-      }else if (currentPath.startsWith('/admin/enquires')) {
-        navigate(`/admin/enquires/${trimmedKeyword}/${page}`);
-      }else {
-        navigate(`/allproducts/${trimmedKeyword}/${page}`);
+        navigate(`/admin/products/${trimmedKeyword}/${page}?${query}`);
+      } else if (currentPath.startsWith('/admin/users')) {
+        navigate(`/admin/users/${trimmedKeyword}/${page}?${query}`);
+      } else if (currentPath.startsWith('/admin/enquires')) {
+        navigate(`/admin/enquires/${trimmedKeyword}/${page}?${query}`);
+      } else {
+        navigate(`/allproducts/${trimmedKeyword}/${page}?${query}`);
       }
       setKeyword('');
     } else {
       if (currentPath.startsWith('/admin/orders')) {
-        navigate(`/admin/orders`); // Navigate to the admin orders page without a keyword
-      }else if (currentPath.startsWith('/admin/products')) {
-        navigate(`/admin/products`); 
-    }else if (currentPath.startsWith('/admin/users')) {
-        navigate(`/admin/users`); 
-    }else if (currentPath.startsWith('/admin/enquires')) {
-      navigate(`/admin/enquires`); 
-  }else{
-      navigate(`/allproducts`); // You can navigate to the homepage or a default search page
-    } 
+        navigate(`/admin/orders?${query}`);
+      } else if (currentPath.startsWith('/admin/products')) {
+        navigate(`/admin/products?${query}`);
+      } else if (currentPath.startsWith('/admin/users')) {
+        navigate(`/admin/users?${query}`);
+      } else if (currentPath.startsWith('/admin/enquires')) {
+        navigate(`/admin/enquires?${query}`);
+      } else {
+        navigate(`/allproducts?${query}`);
+      }
     }
   };
+
   
   return (
     <Container fluid="md" className="d-flex  justify-content-between mb-2">
