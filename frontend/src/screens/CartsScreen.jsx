@@ -102,6 +102,7 @@ const CartScreen = () => {
         ) : (
           <ListGroup variant='flush'>
             {cartItems?.map((item) => (
+              
               <ListGroup.Item key={item._id}>
                 <Row>
                   <Col md={2}>

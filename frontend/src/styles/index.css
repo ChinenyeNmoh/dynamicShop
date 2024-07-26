@@ -143,12 +143,7 @@ main {
 }
 
 
-.fixed-height-card {
-  height: 400px; /* Adjust the height as needed */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
+
 
 .fixed-height-card .card-body {
   flex: 1;
@@ -157,7 +152,4 @@ main {
   justify-content: space-between;
 }
 
-.fixed-height-card .card-img-top {
-  height: 200px; 
-  object-fit: cover;
-}
+

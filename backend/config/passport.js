@@ -91,7 +91,7 @@ const configurePassport = (passport) => {
           "facebook.email": profile._json.email,
           isVerified: true,
         };
-
+        
         try {
           let googleUser = await User.findOne({ "google.googleId": profile._json.email });
           let facebookUser = await User.findOne({ "facebook.facebookId": profile._json.id });
@@ -99,6 +99,7 @@ const configurePassport = (passport) => {
 
           if (facebookUser) {
             console.log('User found with Facebook ID');
+
             done(null, facebookUser);
           } else if (localUser || googleUser) {
             // Update the existing local user with Google information

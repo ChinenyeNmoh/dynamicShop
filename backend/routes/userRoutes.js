@@ -30,8 +30,8 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
   sendData
-  
 );
+
 router.get('/facebooklogin',  passport.authenticate('facebook'));
 router.get(
   '/facebook/callback',

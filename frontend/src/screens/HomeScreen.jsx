@@ -13,9 +13,9 @@ const HomeScreen = () => {
   const home = true;
   const { data, isLoading, error } = useGetProductsQuery({home});
   const products = data?.products || [];
-  console.log(products);
   const { data: couponData } = useGetCouponsQuery();
   const coupons = couponData?.coupons || [];
+  console.log(coupons);
 
  
  
@@ -52,8 +52,8 @@ const HomeScreen = () => {
     </Carousel>
     </Row>
     <Row className='coupclass'>
-    <Col md={12}>
-      <div className='coupon mb-5'>
+    <Col xs={12} md={12}>
+      <div className='coupon mb-5 w-100' >
         <Form className='couponform'>
           <Form.Group className='mb-3 w-50 fw-bold text-success' controlId='code'>
             <Form.Control 

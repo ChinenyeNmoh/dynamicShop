@@ -27,6 +27,7 @@ const LoginScreen = () => {
   const redirect = searchParams.get('redirect') || '/';
   const token = searchParams.get('token');
   const message = searchParams.get('message');
+  const error = searchParams.get('error');
 
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -61,6 +62,12 @@ const LoginScreen = () => {
       toast.info(message);
     }
   }, [message]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const submitHandler = async (e) => {
     e.preventDefault();

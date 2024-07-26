@@ -6,7 +6,7 @@ import Address from '../models/addressModel.js';
 
 const reCalCart = (cart) => {
   cart.cartTotal = cart.products.reduce((acc, prod) => acc + (prod.price * prod.quantity), 0);
-  cart.shippingFee = cart.cartTotal > 50000 ? 0 : 10;
+  cart.shippingFee = cart.cartTotal > 50000 ? 0 : 5000;
   cart.taxFee = Number(0.15 * cart.cartTotal);
   cart.totalPrice = (
     Number(cart.cartTotal) +
@@ -106,6 +106,11 @@ const getCart = asyncHandler(async (req, res) => {
       return res.status(404).json({ error: 'Cart not found' });
     }else{
       await userCart.populate({ path: 'products.productId', select: '-updatedAt -__v' })
+      // Filter out items with quantity 0
+  userCart.products = userCart.products.filter((item) => item.productId.quantity > 0);
+
+  // Save the updated cart
+  await userCart.save();
       return res.status(200).json({
         cart: userCart
       });
