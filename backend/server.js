@@ -98,7 +98,7 @@ app.use('/api/enquiries', enquiryRoutes);
  // get paypal client id from environment variables for production mode.
  //we dont want to save it in the frontend because it is sensitive information
  app.get('/api/config/paypal', (req, res) =>
-  res.send({ clientId: process.env.PAYPAY_ID })
+  res.send({ clientId: process.env.PAYPAL_ID })
 );
 
 

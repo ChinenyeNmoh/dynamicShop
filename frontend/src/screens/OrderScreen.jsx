@@ -14,7 +14,6 @@ import { useGetCartMutation } from '../slices/cartApiSlice';
 const OrderScreen = () => {
   const navigate = useNavigate();
   const cart = useSelector((state) => state.cart);
-  const wish = useSelector((state) => state.wish);
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -247,7 +246,7 @@ const OrderScreen = () => {
               </ListGroup.Item>
               <ListGroup.Item>
                 {error && (
-                  <Message variant='danger'>{error.data?.message}</Message>
+                  <Message variant='danger'>{error.data?.message || error?.data?.error}</Message>
                 )}
               </ListGroup.Item>
               {cart.paymentMethod === 'cashOnDelivery' && (

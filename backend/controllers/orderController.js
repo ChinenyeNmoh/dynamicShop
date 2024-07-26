@@ -5,6 +5,7 @@ import Cart from '../models/cartModel.js';
 import User from '../models/userModel.js';
 import Product from '../models/productModel.js';
 import { sendEmail, processOrderEmailTemplate, deliveredOrderEmailTemplate } from '../utils/mail.js';
+import { verifyPayPalPayment, checkIfNewTransaction } from '../utils/paypal.js';
 import Flutterwave from 'flutterwave-node-v3';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,6 +28,14 @@ const checkOut = asyncHandler(async (req, res) => {
       { path: 'products.productId' },
       { path: 'shippingAddress' }
     ]);
+
+    // double check no item is out of stock before checkout
+    const outOfStockItems = userCart.products.filter(item => item.productId.quantity === 0);
+    if (outOfStockItems.length > 0) {
+      return res.status(400).json({ error: `${outOfStockItems[0].productId.name} is out of stock. Remove from cart to proceed` });
+    }
+
+    
 
     const billingOwner = await User.findById(_id);
     const firstname = billingOwner?.local.firstname || billingOwner.google.firstname || billingOwner.facebook.firstname;
@@ -144,6 +153,15 @@ const checkOut = asyncHandler(async (req, res) => {
         return res.redirect(url);
       }
     }else if(getCartID){
+      console.log('getCartID', getCartID);
+      const { verified, value } = await verifyPayPalPayment(req.body.id);
+      if (!verified) throw new Error('Payment not verified');
+
+  // check if this transaction has been used before
+  const isNewTransaction = await checkIfNewTransaction(Order, req.body.id);
+  if (!isNewTransaction) throw new Error('Transaction has been used before');
+  if(value !== userCart.totalPrice.toFixed(2)) throw new Error('Invalid payment amount');
+
       newOrder = {
         user: _id,
         products: userCart.products.map(item => ({
