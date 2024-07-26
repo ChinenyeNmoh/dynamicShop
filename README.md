@@ -22,10 +22,12 @@ To get started with this project, follow the steps below:
 
 ### Prerequisites
 
-- You will need a Google OAUTH API key for google authentication.
+-  Google OAUTH API key for google authentication.
+-  Facebook OAUTH API key for facebook authentication.
 - Set your mail  credentials  in the `.env` file.
 - set your cloudinary credentials for picture upload.
 - set your flutterwave credentials for card payment.
+- paypal keys for paypay payment
 
 ### Installation
 
@@ -71,7 +73,7 @@ To get started with this project, follow the steps below:
    ```sh
    npm run build
    ```
-To learn more about deploymeny, [see this](https://vitejs.dev/guide/static-deploy.html)
+To learn more about deployment, [see this](https://vitejs.dev/guide/static-deploy.html)
 
 ### Contributing
 We welcome contributions from the community. If you have suggestions to make this project better, please create a pull request or open an issue with the "enhancement" tag. Don't forget to star the project if you find it useful!
